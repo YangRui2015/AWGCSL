@@ -8,7 +8,7 @@ import functools
 import tensorflow as tf
 import numpy as np
 
-from mher.common import tf_util as U
+from awgcsl.common import tf_util as U
 
 
 def store_args(method):
@@ -150,9 +150,10 @@ def reshape_for_broadcasting(source, target):
 def obs_to_goal_fun(env):
     # only support Fetchenv and Handenv now
     from gym.envs.robotics import FetchEnv, hand_env
-    from mher.envs import point2d
-    from mher.envs import sawyer_reach
+    from awgcsl.envs import point2d
+    from awgcsl.envs import sawyer_reach
     from gym.envs.mujoco import reacher
+    from multiworld.envs.mujoco.sawyer_xyz import sawyer_push_and_reach_env
 
     tmp_env = env
     while hasattr(tmp_env, 'env'):
@@ -177,7 +178,7 @@ def obs_to_goal_fun(env):
     elif isinstance(tmp_env, point2d.Point2DEnv):
         def obs_to_goal(observation):
             return observation.copy()
-    elif isinstance(tmp_env, sawyer_reach.SawyerReachXYZEnv):
+    elif isinstance(tmp_env, sawyer_reach.SawyerReachXYZEnv) or isinstance(tmp_env, sawyer_push_and_reach_env.SawyerPushAndReachXYEnv):
         def obs_to_goal(observation):
             return observation
     elif isinstance(tmp_env, reacher.ReacherEnv):
@@ -218,14 +219,16 @@ def random_log(string):
 
 def discounted_return(rewards, gamma, reward_offset=True):
     L = len(rewards)
-    if type(rewards[0]) == np.ndarray:
-        rewards = [x[0] for x in rewards]
+    if type(rewards[0]) == np.ndarray and len(rewards[0]):
+        rewards = np.array(rewards).T
+    else:
+        rewards = np.array(rewards).reshape(1, L)
 
-    rewards = np.array(rewards).reshape(-1)
     if reward_offset:
         rewards += 1   # positive offset
+    # print('reward:' + str(rewards.mean()))
 
-    discount_weights = np.power(gamma, np.arange(L))
-    dis_return = (rewards * discount_weights).sum()
-    undis_return = rewards.sum()
-    return dis_return, undis_return
+    discount_weights = np.power(gamma, np.arange(L)).reshape(1, -1)
+    dis_return = (rewards * discount_weights).sum(axis=1)
+    undis_return = rewards.sum(axis=1)
+    return dis_return.mean(), undis_return.mean()

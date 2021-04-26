@@ -135,12 +135,16 @@ class SawyerGoalWrapper(Wrapper):
 
         self.observation_space = env.observation_space
         self.reward_type = reward_type
-
-        if hasattr(self.env, 'reward_type'):
-            self.env.reward_type = self.reward_type_dict[self.reward_type]
-        if hasattr(self.env, 'env') and hasattr(self.env.env, 'reward_type'):
-            self.env.env.reward_type = self.reward_type_dict[self.reward_type]
-        
+        if hasattr(self.env, 'puck_space'):
+            self.reward_type = 'puck_success'
+            self.env.reward_type = 'puck_success'
+            if hasattr(self.env, 'env') and hasattr(self.env.env, 'reward_type'):
+                self.env.env.reward_type = 'puck_success'
+        else:
+            if hasattr(self.env, 'reward_type'):
+                self.env.reward_type = self.reward_type_dict[self.reward_type]
+            if hasattr(self.env, 'env') and hasattr(self.env.env, 'reward_type'):
+                self.env.env.reward_type = self.reward_type_dict[self.reward_type]
     
     def reset(self):
         return self.env.reset()
@@ -156,6 +160,8 @@ class SawyerGoalWrapper(Wrapper):
             info['is_success'] = info['hand_success']
         if 'success' in info.keys():
             info['is_success'] = info['success']
+        if self.reward_type == 'puck_success':
+            info['is_success'] = info['puck_success']
         return obs, reward, done, info
     
     def render(self, mode='human'):

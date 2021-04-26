@@ -1,4 +1,4 @@
-import mher.common.tf_util as U
+import awgcsl.common.tf_util as U
 import tensorflow as tf
 import numpy as np
 try:

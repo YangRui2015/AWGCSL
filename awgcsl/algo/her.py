@@ -4,13 +4,13 @@ import numpy as np
 from mpi4py import MPI
 import time
 
-from mher.common import logger
-from mher.common import tf_util
-from mher.common.util import set_global_seeds
-from mher.common.mpi_moments import mpi_moments
-import mher.algo.experiment.config as config
-from mher.algo.rollout import RolloutWorker
-from mher.algo.util import dump_params
+from awgcsl.common import logger
+from awgcsl.common import tf_util
+from awgcsl.common.util import set_global_seeds
+from awgcsl.common.mpi_moments import mpi_moments
+import awgcsl.algo.experiment.config as config
+from awgcsl.algo.rollout import RolloutWorker
+from awgcsl.algo.util import dump_params
 
 def mpi_average(value):
     if not isinstance(value, list):
@@ -45,7 +45,7 @@ def train(*, policy, rollout_worker, evaluator,
     logger.info('Start training...')
     # num_timesteps = n_epochs * n_cycles * rollout_length * number of rollout workers
     for epoch in range(n_epochs):
-        # from mher.algo.util import write_to_file
+        # from awgcsl.algo.util import write_to_file
         # write_to_file('\n epoch: {}'.format(epoch))
         policy.set_process(epoch / n_epochs)
         time_start = time.time()

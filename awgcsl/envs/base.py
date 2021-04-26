@@ -2,8 +2,8 @@ import abc
 import numpy as np
 import mujoco_py
 
-from mher.envs.serializable import Serializable
-from mher.envs.mujoco_env import MujocoEnv
+from awgcsl.envs.serializable import Serializable
+from awgcsl.envs.mujoco_env import MujocoEnv
 
 import copy
 

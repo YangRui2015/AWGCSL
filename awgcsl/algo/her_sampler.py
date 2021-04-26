@@ -1,7 +1,7 @@
 from tensorflow.python.ops.gen_batch_ops import batch
-from mher.common import logger
+from awgcsl.common import logger
 import numpy as np
-from mher.algo.util import obs_to_goal_fun, random_log
+from awgcsl.algo.util import obs_to_goal_fun, random_log
 
 def dynamic_interaction(o, g, action_fun, dynamic_model, steps):
     last_state = o.copy()
@@ -63,13 +63,16 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun, obs_to_go
     if no_her:
         print( '*' * 10 + 'Will not use HER in this method' + '*' * 10)
     
-    def _preprocess(episode_batch, batch_size_in_transitions):
+    def _preprocess(episode_batch, batch_size_in_transitions, ags_std=None, use_ag_std=False):
         T = episode_batch['u'].shape[1]    # steps of a episode
         rollout_batch_size = episode_batch['u'].shape[0]   # number of episodes
         batch_size = batch_size_in_transitions   # number of goals sample from rollout
 
         # np.random.randint doesn't contain the last one, so comes from 0 to roolout_batch_size-1
-        episode_idxs = np.random.randint(0, rollout_batch_size, batch_size)
+        if use_ag_std:
+            episode_idxs = np.random.choice(np.arange(rollout_batch_size), batch_size, p=ags_std[:rollout_batch_size]/ags_std[:rollout_batch_size].sum())
+        else:
+            episode_idxs = np.random.randint(0, rollout_batch_size, batch_size)
         t_samples = np.random.randint(T, size=batch_size)
         transitions = {key: episode_batch[key][episode_idxs, t_samples].copy()
                        for key in episode_batch.keys()}
@@ -92,7 +95,7 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun, obs_to_go
 
     def _get_her_ags(episode_batch, episode_idxs, t_samples, batch_size, T, future_p=future_p, return_t=False):
         her_indexes = (np.random.uniform(size=batch_size) < future_p)
-        future_offset = np.random.uniform(size=batch_size) * (T - t_samples)  
+        future_offset = np.random.uniform(size=batch_size) * (T-t_samples)
         future_offset = future_offset.astype(int)
         future_t = (t_samples + 1 + future_offset)[her_indexes]
         future_ag = episode_batch['ag'][episode_idxs[her_indexes], future_t]
@@ -172,11 +175,13 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun, obs_to_go
         return _reshape_transitions(transitions, batch_size, batch_size_in_transitions)
 
     def _sample_nstep_supervised_her_transitions(episode_batch, batch_size_in_transitions, info):
-        transitions, episode_idxs, t_samples, batch_size, T = _preprocess(episode_batch, batch_size_in_transitions)
-        train_policy, gamma, get_Q_pi, method  = info['train_policy'], info['gamma'], info['get_Q_pi'], info['method']
+        train_policy, gamma, get_Q_pi, method, get_ags_std  = info['train_policy'], info['gamma'], info['get_Q_pi'], info['method'], info['get_ags_std']
+        ags_std = get_ags_std()
+        transitions, episode_idxs, t_samples, batch_size, T = _preprocess(episode_batch, batch_size_in_transitions, ags_std, use_ag_std=False)
 
         random_log('using nstep supervide policy learning with method {}'.format(method))
         future_ag, her_indexes, offset = _get_her_ags(episode_batch, episode_idxs, t_samples, batch_size, T, future_p=1, return_t=True)
+        original_g = transitions['g'].copy() # save to train the value function
         transitions['g'][her_indexes] = future_ag
 
         if method == '':
@@ -205,8 +210,15 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun, obs_to_go
                     pass
 
             loss = train_policy(o=transitions['o'], g=transitions['g'], u=transitions['u'], weights=weights)  
-    
-        transitions['r'] = _get_reward(transitions['ag_2'], transitions['g']) # train value function
+
+        # train value function
+        keep_origin_rate = 0.2
+        origin_index = (np.random.uniform(size=batch_size) < keep_origin_rate)
+        transitions['g'][origin_index] = original_g[origin_index]
+        transitions['r'] = _get_reward(transitions['ag_2'], transitions['g']) 
+
+        
+        # import pdb;pdb.set_trace()
         return _reshape_transitions(transitions, batch_size, batch_size_in_transitions)
 
     return _sample_her_transitions, _sample_nstep_dynamic_her_transitions, _sample_nstep_supervised_her_transitions

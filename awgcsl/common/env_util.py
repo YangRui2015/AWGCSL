@@ -15,14 +15,14 @@ import gym
 import multiprocessing
 from collections import defaultdict
 from gym.wrappers import FlattenObservation
-from mher.common import logger
-from mher.common.monitor import Monitor
-from mher.common.util import set_global_seeds
-from mher.common.subproc_vec_env import SubprocVecEnv
-from mher.common.dummy_vec_env import DummyVecEnv
-from mher.common.wrappers import ClipActionsWrapper
-from mher.common.tf_util import get_session
-from mher.envs import register_envs
+from awgcsl.common import logger
+from awgcsl.common.monitor import Monitor
+from awgcsl.common.util import set_global_seeds
+from awgcsl.common.subproc_vec_env import SubprocVecEnv
+from awgcsl.common.dummy_vec_env import DummyVecEnv
+from awgcsl.common.wrappers import ClipActionsWrapper
+from awgcsl.common.tf_util import get_session
+from awgcsl.envs import register_envs
 
 register_envs()
 
@@ -91,20 +91,20 @@ def make_env(env_id, env_type, mpi_rank=0, subrank=0, seed=None, reward_scale=1.
         importlib.import_module(module_name)
     env = gym.make(env_id, **env_kwargs)
 
-    if env_id.startswith('FetchReach'):
-        env._max_episode_steps = 100
+    if env_id.startswith('Fetch'):
+        env._max_episode_steps = 50
     elif env_id.startswith('Sawyer'):
-        from mher.envs.multi_world_wrapper import SawyerGoalWrapper
+        from awgcsl.envs.multi_world_wrapper import SawyerGoalWrapper
         env = SawyerGoalWrapper(env)
         if not hasattr(env, '_max_episode_steps'):
-            env = gym.wrappers.TimeLimit(env, max_episode_steps=100)
+            env = gym.wrappers.TimeLimit(env, max_episode_steps=50)
     elif env_id.startswith('Point2D'):
-        from mher.envs.multi_world_wrapper import PointGoalWrapper
-        env = gym.wrappers.TimeLimit(env, max_episode_steps=100)
+        from awgcsl.envs.multi_world_wrapper import PointGoalWrapper
+        env = gym.wrappers.TimeLimit(env, max_episode_steps=50)
         env = PointGoalWrapper(env)
     elif env_id.startswith('Reacher'):
-        from mher.envs.multi_world_wrapper import ReacherGoalWrapper
-        env._max_episode_steps = 100
+        from awgcsl.envs.multi_world_wrapper import ReacherGoalWrapper
+        env._max_episode_steps = 50
         env = ReacherGoalWrapper(env)
     else:
         raise NotImplementedError('No such environment till now.')

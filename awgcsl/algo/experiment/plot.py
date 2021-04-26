@@ -1,4 +1,4 @@
-# DEPRECATED, use mher.common.plot_util instead
+# DEPRECATED, use awgcsl.common.plot_util instead
 
 import os
 import matplotlib.pyplot as plt

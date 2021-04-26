@@ -4,14 +4,14 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.staging import StagingArea
 
-from mher.common import logger
-from mher.algo.util import (
+from awgcsl.common import logger
+from awgcsl.algo.util import (
     import_function, store_args, flatten_grads, transitions_in_episode_batch)
-from mher.algo.normalizer import Normalizer
-from mher.algo.replay_buffer import ReplayBuffer
-from mher.common.mpi_adam import MpiAdam
-from mher.common import tf_util
-from mher.algo.dynamics import ForwardDynamicsNumpy
+from awgcsl.algo.normalizer import Normalizer
+from awgcsl.algo.replay_buffer import ReplayBuffer
+from awgcsl.common.mpi_adam import MpiAdam
+from awgcsl.common import tf_util
+from awgcsl.algo.dynamics import ForwardDynamicsNumpy
 import time
 
 
@@ -98,6 +98,7 @@ class DDPG(object):
                 'train_policy':self.train_policy,
                 'get_Q_pi':self.get_Q_pi,
                 'method': self.su_method,
+                'get_ags_std':self.get_ags_std
             }
         else: 
             sampler = self.sample_transitions
@@ -105,7 +106,9 @@ class DDPG(object):
         
         self.buffer = ReplayBuffer(buffer_shapes, buffer_size, self.T, sampler, self.sample_transitions, info)
         self.process_rate = 0
-        
+    
+    def get_ags_std(self):
+        return self.buffer.ag_std_array.copy()
 
     def set_process(self, rate):
         self.process_rate = rate
@@ -146,6 +149,8 @@ class DDPG(object):
                     compute_Q=False):
         o, g = self._preprocess_og(o, ag, g)
         policy = self.target if use_target_net else self.main
+        if self.use_supervised:
+            policy = self.main
         # values to compute
         vals = [policy.pi_tf]
         if compute_Q:
@@ -178,7 +183,7 @@ class DDPG(object):
         o = np.clip(o, -self.clip_obs, self.clip_obs)
         g = np.clip(g, -self.clip_obs, self.clip_obs)
 
-        policy = self.target  # main
+        policy = self.target
         feed = {
             policy.o_tf: o.reshape(-1, self.dimo),
             policy.g_tf: g.reshape(-1, self.dimg),
@@ -190,7 +195,7 @@ class DDPG(object):
     def get_Q_pi(self, o, g):
         o = np.clip(o, -self.clip_obs, self.clip_obs)
         g = np.clip(g, -self.clip_obs, self.clip_obs)
-        policy = self.target
+        policy = self.main #self.target
         feed = {
             policy.o_tf: o.reshape(-1, self.dimo),
             policy.g_tf:g.reshape(-1, self.dimg)
@@ -315,13 +320,19 @@ class DDPG(object):
             return critic_loss, actor_loss
         else:
             self.update_critic_only()
+            # self.update_target_net()
     
     def update_critic_only(self):
-        critic_loss, Q_grad = self.sess.run([  
+        V, r, target_tf, main_tf, critic_loss, Q_grad = self.sess.run([  
+            self.target.Q_pi_tf,
+            self.batch_r,
+            self.target_tf,
+            self.main.Q_tf,
             self.Q_loss_tf,
             self.Q_grad_tf,
         ])
         self.Q_adam.update(Q_grad, self.Q_lr)
+    
 
     def _init_target_net(self):
         self.sess.run(self.init_target_net_op)
@@ -383,12 +394,18 @@ class DDPG(object):
 
         # loss functions
         target_Q_pi_tf = self.target.Q_pi_tf
+        self.batch_r = batch_tf['r']
         clip_range = (-self.clip_return, 0. if self.clip_pos_returns else np.inf)
+        if not self.use_supervised:
+            clip_range = (-self.clip_return, 0. if self.clip_pos_returns else np.inf)
+        else:
+            clip_range = (-self.clip_return, self.clip_return)
         if self.use_dynamic_nstep:   
             target_tf = tf.clip_by_value(batch_tf['r'] , *clip_range)  # lambda target 
         else:
             target_tf = tf.clip_by_value(batch_tf['r'] + self.gamma * target_Q_pi_tf, *clip_range)
-            
+
+        self.target_tf = target_tf
         self.Q_loss_tf = tf.reduce_mean(tf.square(tf.stop_gradient(target_tf) - self.main.Q_tf))
 
         self.pi_loss_tf = -tf.reduce_mean(self.main.Q_pi_tf)

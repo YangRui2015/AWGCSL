@@ -4,7 +4,7 @@ import numpy as np
 
 
 class ReplayBuffer:
-    def __init__(self, buffer_shapes, size_in_transitions, T, sample_transitions, default_sampler, info=None): 
+    def __init__(self, buffer_shapes, size_in_transitions, T, sample_transitions, default_sampler, info=None, ag_std=True): 
         """Creates a replay buffer.
 
         Args:
@@ -20,6 +20,9 @@ class ReplayBuffer:
         self.sample_transitions = sample_transitions
         self.default_sampler = default_sampler
         self.info = info
+        self.ag_std = True
+        if self.ag_std:
+            self.ag_std_array = np.zeros(self.size)
 
         # self.buffers is {key: array(size_in_episodes x T or T+1 x dim_key)}
         self.buffers = {key: np.empty([self.size, *shape])
@@ -68,7 +71,7 @@ class ReplayBuffer:
         batch_size = batch_sizes[0]
 
         with self.lock:
-            idxs = self._get_storage_idx(batch_size)  #use ordered idx get lower performance
+            idxs = self._get_ordered_storage_idx(batch_size)  #use ordered idx get lower performance
 
             # load inputs into buffers
             for key in episode_batch.keys():
@@ -76,6 +79,15 @@ class ReplayBuffer:
                     self.buffers[key][idxs] = episode_batch[key]
 
             self.n_transitions_stored += batch_size * self.T
+        
+        # compute ag std
+        if type(idxs) != np.ndarray:
+            idxs = [idxs]
+
+        for idx in idxs:
+            ags = self.buffers['ag'][idx]
+            self.ag_std_array[idx] = np.std(ags, axis=0).mean()
+
 
     def get_current_episode_size(self):
         with self.lock:

@@ -185,9 +185,12 @@ if __name__ == "__main__":
 
     ##################################
     # # # # subplot figures
-    save_dir = './test_all2.png'
-    prefix_dir = '/Users/yangrui/Desktop/logs_weighted/no_target_new_param/'
+    save_dir = './test_5.png'
+    prefix_dir = '/Users/yangrui/Desktop/logs_weighted/learn_with_target_Q/'
     
+    # temp = 'gamma_exp_adv_gcsl/'
+    # path_list = ['', 'no_target_new_param/', 'ordered_buffer_5e4/','small_buffer1e4/', 'small_buffer2e3/']
+    # path_list = [x + temp for x in path_list]
     path_list = ['gcsl/', 'gamma_gcsl/', 'gamma_tanh_adv_gcsl/', 'gamma_exp_adv_gcsl/', 
                 'tanh_adv_gcsl/', 'exp_adv_gcsl/']  
     pic_title = ['Point2DLargeEnv-v1', 'Point2D-FourRoom-v1', 'FetchReach-v1', 'SawyerReachXYZEnv-v1', 'Reacher-v2']
@@ -199,6 +202,7 @@ if __name__ == "__main__":
  
     infos = [pic_title, 'Epoch', 'Average Return'] #'Median Success Rate']
     row = 1
+    # legend = ['origin', 'new param/no target', 'ordered buffer 5e4','ordered buffer 1e4', 'ordered buffer 2e3']
     legend = ['GCSL', 'GCSL+gamma', 'GCSL+gamma+tanh_adv', 'GCSL+gamma+exp_adv','tanh_adv', 'exp_adv'] 
     subplot_main(pic_dirs, legend, infos, row, key='test/return', save_dir=save_dir)
 

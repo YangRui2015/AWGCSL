@@ -6,13 +6,13 @@ import gym
 import tensorflow as tf
 import numpy as np
 
-from mher.common.vec_env import VecEnv
-from mher.common.env_util import get_env_type, build_env, get_game_envs
-from mher.common.parse_args import common_arg_parser, parse_unknown_args
-from mher.common import logger
-from mher.common.parse_args import get_learn_function_defaults, parse_cmdline_kwargs, parse_unknown_args
-from mher.algo.her import learn
-from mher.util import init_logger
+from awgcsl.common.vec_env import VecEnv
+from awgcsl.common.env_util import get_env_type, build_env, get_game_envs
+from awgcsl.common.parse_args import common_arg_parser, parse_unknown_args
+from awgcsl.common import logger
+from awgcsl.common.parse_args import get_learn_function_defaults, parse_cmdline_kwargs, parse_unknown_args
+from awgcsl.algo.her import learn
+from awgcsl.util import init_logger
 
 
 _game_envs = get_game_envs()

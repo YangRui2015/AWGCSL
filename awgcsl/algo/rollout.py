@@ -2,7 +2,7 @@ from collections import deque
 
 import numpy as np
 
-from mher.algo.util import convert_episode_to_batch_major, store_args, discounted_return
+from awgcsl.algo.util import convert_episode_to_batch_major, store_args, discounted_return
 
 
 class RolloutWorker:
@@ -129,9 +129,9 @@ class RolloutWorker:
                        g=goals,
                        ag=achieved_goals,
                        r=rewards)
+        import pdb;pdb.set_trace()
         for key, value in zip(self.info_keys, info_values):
             episode['info_{}'.format(key)] = value
-
         # stats
         successful = np.array(successes)[-1, :]
         assert successful.shape == (self.rollout_batch_size,)

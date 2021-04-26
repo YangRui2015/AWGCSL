@@ -1,5 +1,5 @@
 import tensorflow as tf
-from mher.algo.util import store_args, nn
+from awgcsl.algo.util import store_args, nn
 
 class ActorCritic: 
     @store_args
@@ -14,8 +14,8 @@ class ActorCritic:
             dimu (int): the dimension of the actions
             max_u (float): the maximum magnitude of actions; action outputs will be scaled
                 accordingly
-            o_stats (mher.algo.Normalizer): normalizer for observations
-            g_stats (mher.algo.Normalizer): normalizer for goals
+            o_stats (awgcsl.algo.Normalizer): normalizer for observations
+            g_stats (awgcsl.algo.Normalizer): normalizer for goals
             hidden (int): number of hidden units that should be used in hidden layers
             layers (int): number of hidden layers
         """

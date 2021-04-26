@@ -354,7 +354,7 @@ class Logger(object):
         if self.comm is None:
             d = self.name2val
         else:
-            from mher.common import mpi_util
+            from awgcsl.common import mpi_util
             d = mpi_util.mpi_weighted_mean(self.comm,
                 {name : (val, self.name2cnt.get(name, 1))
                     for (name, val) in self.name2val.items()})
@@ -403,7 +403,7 @@ def get_rank_without_mpi_import():
     return 0
 
 
-def configure(dir=None, format_strs='stdout,log,csv,tensorboard', comm=None, log_suffix=''):
+def configure(dir=None, format_strs='stdout,log,csv', comm=None, log_suffix=''):
     """
     If comm is provided, average all numerical stats across that comm
     """

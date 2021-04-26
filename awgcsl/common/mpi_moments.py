@@ -1,6 +1,6 @@
 from mpi4py import MPI
 import numpy as np
-from mher.common.util import zipsame
+from awgcsl.common.util import zipsame
 
 
 def mpi_mean(x, axis=0, comm=None, keepdims=False):
@@ -36,7 +36,7 @@ def test_runningmeanstd():
     import subprocess
     subprocess.check_call(['mpirun', '-np', '3',
         'python','-c',
-        'from mher.common.mpi_moments import _helper_runningmeanstd; _helper_runningmeanstd()'])
+        'from awgcsl.common.mpi_moments import _helper_runningmeanstd; _helper_runningmeanstd()'])
 
 def _helper_runningmeanstd():
     comm = MPI.COMM_WORLD

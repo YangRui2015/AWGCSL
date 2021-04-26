@@ -2,10 +2,10 @@ from collections import OrderedDict
 import numpy as np
 from gym.spaces import Box, Dict
 
-from mher.envs.env_util import get_stat_in_paths, \
+from awgcsl.envs.env_util import get_stat_in_paths, \
     create_stats_ordered_dict, get_asset_full_path
-from mher.envs.multitask_env import MultitaskEnv
-from mher.envs.base import SawyerXYZEnv
+from awgcsl.envs.multitask_env import MultitaskEnv
+from awgcsl.envs.base import SawyerXYZEnv
 
 
 class SawyerReachXYZEnv(SawyerXYZEnv, MultitaskEnv):

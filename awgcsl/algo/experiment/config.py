@@ -2,12 +2,12 @@ import os
 import numpy as np
 import gym
 
-from mher.common import logger
-from mher.algo.ddpg import DDPG
-from mher.algo.her_sampler import make_sample_her_transitions, make_random_sample
-from mher.algo.util import obs_to_goal_fun
-from mher.common.monitor import Monitor
-from mher.envs.multi_world_wrapper import PointGoalWrapper, SawyerGoalWrapper, ReacherGoalWrapper
+from awgcsl.common import logger
+from awgcsl.algo.ddpg import DDPG
+from awgcsl.algo.her_sampler import make_sample_her_transitions, make_random_sample
+from awgcsl.algo.util import obs_to_goal_fun
+from awgcsl.common.monitor import Monitor
+from awgcsl.envs.multi_world_wrapper import PointGoalWrapper, SawyerGoalWrapper, ReacherGoalWrapper
 
 DEFAULT_ENV_PARAMS = {
     'Point2DLargeEnv-v1':{
@@ -29,7 +29,22 @@ DEFAULT_ENV_PARAMS = {
     'Reacher-v2': {
         'n_cycles': 20,  
         'n_batches': 4,
-        'num_epoch': 100
+        'buffer_size': int(5E4),
+    },
+    'SawyerPushAndReachEnvEasy-v0':{
+        'n_cycles': 20,  
+        'n_batches': 4,
+        'num_epoch': 100,
+        'batch_size': 256,
+        'buffer_size': int(5E4),
+    },
+    'FetchPush-v1':{
+        'n_cycles': 20,  
+        'n_batches': 5,
+        'num_epoch': 100,
+        'batch_size': 256,
+        'buffer_size': int(5E4),
+        'rollout_batch_size': 6,
     }
 }
 
@@ -40,10 +55,10 @@ DEFAULT_PARAMS = {
     # ddpg
     'layers': 3,  # number of layers in the critic/actor networks
     'hidden': 256,  # number of neurons in each hidden layers
-    'network_class': 'mher.algo.actor_critic:ActorCritic',
-    'Q_lr': 5e-3,  # critic learning rate
-    'pi_lr': 5e-3,  # actor learning rate
-    'buffer_size': int(2E4),  # for experience replay
+    'network_class': 'awgcsl.algo.actor_critic:ActorCritic',
+    'Q_lr': 5e-4,  # critic learning rate
+    'pi_lr': 5e-4,  # actor learning rate
+    'buffer_size': int(1E4),  # for experience replay
     'polyak': 0.9,  #polyak averaging coefficient
     'action_l2': 1.0,  # quadratic penalty on actions (before rescaling by max_u)
     'clip_obs': 200.,
@@ -53,7 +68,7 @@ DEFAULT_PARAMS = {
     'num_epoch':50, 
     'n_cycles': 5,  # per epoch
     'rollout_batch_size': 1,  # per mpi thread
-    'n_batches': 5,  # training batches per cycle
+    'n_batches': 4,  # training batches per cycle
     'batch_size': 128,  # per mpi thread, measured in transitions and reduced to even multiple of chunk_length.
     'n_test_rollouts': 100,  # number of test rollouts per epoch, each consists of rollout_batch_size rollouts
     'test_with_polyak': False,  # run test episodes with the target network
@@ -138,7 +153,7 @@ def prepare_params(kwargs):
             logger.log('Can not make sparse reward environment')
             env = gym.make(env_name)
         # add wrapper for multiworld environment
-        if env_name.startswith('FetchReach'):
+        if env_name.startswith('Fetch'):
             env._max_episode_steps = 50
         elif env_name.startswith('Point2D'):
             env = PointGoalWrapper(env)

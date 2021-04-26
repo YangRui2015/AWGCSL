@@ -1,10 +1,10 @@
-import mher.common.tf_util as U
+import awgcsl.common.tf_util as U
 import tensorflow as tf
 import numpy as np
-from mher.common import logger
-from mher.common.mpi_adam import MpiAdam
-from mher.algo.util import store_args
-from mher.algo.normalizer import NormalizerNumpy
+from awgcsl.common import logger
+from awgcsl.common.mpi_adam import MpiAdam
+from awgcsl.algo.util import store_args
+from awgcsl.algo.normalizer import NormalizerNumpy
 
 
 def nn(input, layers_sizes, reuse=None, flatten=False, use_layer_norm=False, name=""):

@@ -1,10 +1,12 @@
 import gym
 from gym.envs.registration import register
+# import multiworld
+# multiworld.register_all_envs()
 
 def register_envs():
     register(
         id='SawyerReachXYZEnv-v1',
-        entry_point='mher.envs.sawyer_reach:SawyerReachXYZEnv',
+        entry_point='awgcsl.envs.sawyer_reach:SawyerReachXYZEnv',
         tags={
             'git-commit-hash': '2d95c75',
             'author': 'murtaza'
@@ -16,7 +18,7 @@ def register_envs():
     )
     register(
         id='Point2DLargeEnv-v1',
-        entry_point='mher.envs.point2d:Point2DEnv',
+        entry_point='awgcsl.envs.point2d:Point2DEnv',
         tags={
             'git-commit-hash': '4efe2be',
             'author': 'Vitchyr'
@@ -35,7 +37,7 @@ def register_envs():
     )
     register(
         id='Point2D-FourRoom-v1',
-        entry_point='mher.envs.point2d:Point2DWallEnv',
+        entry_point='awgcsl.envs.point2d:Point2DWallEnv',
         kwargs={
             'action_scale': 1,
             'wall_shape': 'four-room-v1', 
