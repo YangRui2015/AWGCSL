@@ -61,7 +61,7 @@ def pad(xs, value=np.nan):
 
 
 # Load all data.
-def load_data(dir, key='test/success_rate', filename='progress.csv'):
+def load_data(dir, key='test/success_rate', filename='progress.csv', x_time='epoch'):
     data = []
     # find all */progress.csv under dir
     paths = [os.path.abspath(os.path.join(path, '..')) for path in glob2.glob(os.path.join(dir, '**', filename))]
@@ -76,21 +76,27 @@ def load_data(dir, key='test/success_rate', filename='progress.csv'):
 
         success_rate = np.array(results[key])  #[:50]
         epoch = np.array(results['epoch']) + 1  #[:50]
-
+        episodes = np.array(results['train/episode']) - 20
         # Process and smooth data.
         assert success_rate.shape == epoch.shape
-        x = epoch
+        if x_time == 'epoch':
+            x = epoch
+        elif x_time == 'episode':
+            x = episodes
+        else:
+            print('No such x axis label')
+            import pdb;pdb.set_trace()
         y = success_rate
         if smooth:
-            x, y = smooth_reward_curve(epoch, success_rate)
+            x, y = smooth_reward_curve(x, y)
         assert x.shape == y.shape
         data.append((x, y))
     return data
 
-def load_datas(dirs, key='test/success_rate', filename='progress.csv'):
+def load_datas(dirs, key='test/success_rate', filename='progress.csv', x_time='epoch'):
     datas = []
     for dir in dirs:
-        data = load_data(dir, key, filename)
+        data = load_data(dir, key, filename, x_time)
         datas.append(data)
     return datas
 
@@ -105,7 +111,6 @@ def plot_datas(datas, labels, info, fontsize=16, i=0, j=0, method='median'):
             import pdb; pdb.set_trace()
         xs, ys = pad(xs), pad(ys)
         assert xs.shape == ys.shape
-        # xs = xs * 15 * 50 / 1e4  ### add
         if method == 'median':
             plt.plot(xs[0], np.nanmedian(ys, axis=0), label=label)
             plt.fill_between(xs[0], np.nanpercentile(ys, 25, axis=0), np.nanpercentile(ys, 75, axis=0), alpha=0.25)
@@ -119,26 +124,25 @@ def plot_datas(datas, labels, info, fontsize=16, i=0, j=0, method='median'):
 
     
     plt.title(title, fontsize=fontsize-4)
-    # if i == 1:
     plt.xlabel(xlabel, fontsize=fontsize)
     if j == 0:
         plt.ylabel(ylabel, fontsize=fontsize)
-    # if j == 4:
-    plt.legend(fontsize=fontsize-6) #, loc=4, bbox_to_anchor=(0.5, 0.06, 0.5, 0.5))
+    if j == 0:
+        plt.legend(fontsize=fontsize-6) #, loc=4, bbox_to_anchor=(0.5, 0.06, 0.5, 0.5))
     plt.xticks(fontsize=fontsize-4)
     plt.yticks(fontsize=fontsize-4)
 
-def plot_main(dirs, labels, info, key='test/success_rate', filename='progress.csv', save_dir='./test.png'):
+def plot_main(dirs, labels, info, key='test/success_rate', filename='progress.csv', save_dir='./test.png', x_time='epoch'):
     plt.figure(dpi=300, figsize=(5,4))
     sns.set(style='whitegrid')
-    datas = load_datas(dirs, key, filename)
+    datas = load_datas(dirs, key, filename, x_time)
 
     plot_datas(datas, labels, info)
     plt.subplots_adjust(left=0.15, right=0.98, bottom=0.14, top=0.92, hspace=0.3, wspace=0.15)
     plt.savefig(save_dir)
 
 def subplot_main(pic_dirs, labels, infos, row=1, key='test/success_rate',\
-                    filename='progress.csv', save_dir='./test.png'):
+                    filename='progress.csv', save_dir='./test.png', x_time='epoch'):
     n = len(pic_dirs)  # number of pics
     col = math.ceil(n / row)
     fig, axes = plt.subplots(row, col, figsize=(4.25 * col,4))
@@ -153,7 +157,7 @@ def subplot_main(pic_dirs, labels, infos, row=1, key='test/success_rate',\
                 break
             
             plt.subplot(row, col, idx+1)
-            datas = load_datas(pic_dirs[idx], key, filename)
+            datas = load_datas(pic_dirs[idx], key, filename, x_time)
             plot_datas(datas, labels, [titles[idx], *xy_label], i=i, j=j)
 
     plt.savefig(save_dir)
@@ -185,26 +189,26 @@ if __name__ == "__main__":
 
     ##################################
     # # # # subplot figures
-    save_dir = './test_5.png'
-    prefix_dir = '/Users/yangrui/Desktop/logs_weighted/learn_with_target_Q/'
+    save_dir = './test_6.png'
+    prefix_dir = '/Users/yangrui/Desktop/logs_weighted/latest/'
     
     # temp = 'gamma_exp_adv_gcsl/'
     # path_list = ['', 'no_target_new_param/', 'ordered_buffer_5e4/','small_buffer1e4/', 'small_buffer2e3/']
     # path_list = [x + temp for x in path_list]
-    path_list = ['gcsl/', 'gamma_gcsl/', 'gamma_tanh_adv_gcsl/', 'gamma_exp_adv_gcsl/', 
-                'tanh_adv_gcsl/', 'exp_adv_gcsl/']  
-    pic_title = ['Point2DLargeEnv-v1', 'Point2D-FourRoom-v1', 'FetchReach-v1', 'SawyerReachXYZEnv-v1', 'Reacher-v2']
+    path_list = ['gcsl/', 'gamma_gcsl/', 'gamma_tanh_adv_gcsl/', 'gamma_exp_adv_gcsl/', 'gamma_adv_gcsl/',
+                'tanh_adv_gcsl/', 'exp_adv_gcsl/', 'adv_gcsl/', 'gamma_exp_adv_clip10_gcsl/']  
+    pic_title = ['Point2DLargeEnv-v1', 'Point2D-FourRoom-v1', 'FetchReach-v1', 'SawyerReachXYZEnv-v1', 'Reacher-v2', 'SawyerDoor-v0']  
   
     pic_dirs = [[[] for _ in range(len(path_list))] for _ in range(len(pic_title))]
     for i in range(len(pic_title)):
         for j in range(len(path_list)):
             pic_dirs[i][j] = prefix_dir + path_list[j] + '/' + pic_title[i]
  
-    infos = [pic_title, 'Epoch', 'Average Return'] #'Median Success Rate']
+    infos = [pic_title, 'Episodes', 'Average Return'] #'Median Success Rate']
     row = 1
     # legend = ['origin', 'new param/no target', 'ordered buffer 5e4','ordered buffer 1e4', 'ordered buffer 2e3']
-    legend = ['GCSL', 'GCSL+gamma', 'GCSL+gamma+tanh_adv', 'GCSL+gamma+exp_adv','tanh_adv', 'exp_adv'] 
-    subplot_main(pic_dirs, legend, infos, row, key='test/return', save_dir=save_dir)
+    legend = ['GCSL', 'GCSL+gamma', 'GCSL+gamma+tanh_adv', 'GCSL+gamma+exp_adv','gamma+adv', 'tanh_adv', 'exp_adv', 'adv', 'GCSL+gamma+exp_adv clip10'] 
+    subplot_main(pic_dirs, legend, infos, row, key='test/return', save_dir=save_dir, x_time='episode')
 
 
 

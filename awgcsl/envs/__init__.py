@@ -1,7 +1,5 @@
 import gym
 from gym.envs.registration import register
-# import multiworld
-# multiworld.register_all_envs()
 
 def register_envs():
     register(
@@ -53,4 +51,9 @@ def register_envs():
             'show_goal': True,
             'get_image_base_render_size': (48, 48),
         },
+    )
+    # register gcsl envs
+    register(
+        id='SawyerDoor-v0',
+        entry_point='awgcsl.envs.sawyer_door:SawyerDoorGoalEnv',
     )

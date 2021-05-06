@@ -3,7 +3,6 @@ import numpy as np
 from gym.core import Wrapper
 from gym.spaces import Dict, Box
 import copy
-
 from numpy.linalg.linalg import norm
 
 
@@ -145,6 +144,9 @@ class SawyerGoalWrapper(Wrapper):
                 self.env.reward_type = self.reward_type_dict[self.reward_type]
             if hasattr(self.env, 'env') and hasattr(self.env.env, 'reward_type'):
                 self.env.env.reward_type = self.reward_type_dict[self.reward_type]
+        if 'Door' in self.env.__str__():
+            self.reward_type = 'angle_success'
+
     
     def reset(self):
         return self.env.reset()
@@ -162,6 +164,9 @@ class SawyerGoalWrapper(Wrapper):
             info['is_success'] = info['success']
         if self.reward_type == 'puck_success':
             info['is_success'] = info['puck_success']
+        elif self.reward_type == 'angle_success':
+            info['is_success'] = info['angle_success']
+
         return obs, reward, done, info
     
     def render(self, mode='human'):
