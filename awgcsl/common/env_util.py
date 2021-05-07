@@ -107,7 +107,8 @@ def make_env(env_id, env_type, mpi_rank=0, subrank=0, seed=None, reward_scale=1.
         env._max_episode_steps = 50
         env = ReacherGoalWrapper(env)
     else:
-        raise NotImplementedError('No such environment till now.')
+        env = gym.wrappers.TimeLimit(env, max_episode_steps=50)
+        # raise NotImplementedError('No such environment till now.')
 
     if flatten_dict_observations and isinstance(env.observation_space, gym.spaces.Dict):
         env = FlattenObservation(env)

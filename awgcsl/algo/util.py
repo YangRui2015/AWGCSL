@@ -153,7 +153,6 @@ def obs_to_goal_fun(env):
     from awgcsl.envs import point2d
     from awgcsl.envs import sawyer_reach
     from gym.envs.mujoco import reacher
-    from multiworld.envs.mujoco.sawyer_xyz import sawyer_push_and_reach_env
 
     tmp_env = env
     while hasattr(tmp_env, 'env'):
@@ -178,14 +177,16 @@ def obs_to_goal_fun(env):
     elif isinstance(tmp_env, point2d.Point2DEnv):
         def obs_to_goal(observation):
             return observation.copy()
-    elif isinstance(tmp_env, sawyer_reach.SawyerReachXYZEnv) or isinstance(tmp_env, sawyer_push_and_reach_env.SawyerPushAndReachXYEnv):
+    elif isinstance(tmp_env, sawyer_reach.SawyerReachXYZEnv):
         def obs_to_goal(observation):
             return observation
     elif isinstance(tmp_env, reacher.ReacherEnv):
         def obs_to_goal(observation):
             return observation[:, -3:-1]
     else:
-        raise NotImplementedError('Do not support such type {}'.format(env))
+        def obs_to_goal(observation):
+            return observation
+        # raise NotImplementedError('Do not support such type {}'.format(env))
         
     return obs_to_goal
 
@@ -226,7 +227,6 @@ def discounted_return(rewards, gamma, reward_offset=True):
 
     if reward_offset:
         rewards += 1   # positive offset
-    # print('reward:' + str(rewards.mean()))
 
     discount_weights = np.power(gamma, np.arange(L)).reshape(1, -1)
     dis_return = (rewards * discount_weights).sum(axis=1)

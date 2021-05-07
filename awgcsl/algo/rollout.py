@@ -129,7 +129,7 @@ class RolloutWorker:
                        g=goals,
                        ag=achieved_goals,
                        r=rewards)
-        import pdb;pdb.set_trace()
+
         for key, value in zip(self.info_keys, info_values):
             episode['info_{}'.format(key)] = value
         # stats

@@ -7,7 +7,7 @@ from tensorflow.contrib.staging import StagingArea
 from awgcsl.common import logger
 from awgcsl.algo.util import (
     import_function, store_args, flatten_grads, transitions_in_episode_batch)
-from awgcsl.algo.normalizer import Normalizer
+from awgcsl.algo.normalizer import Normalizer, AverageNormNumpy, MaxNormNumpy
 from awgcsl.algo.replay_buffer import ReplayBuffer
 from awgcsl.common.mpi_adam import MpiAdam
 from awgcsl.common import tf_util
@@ -27,7 +27,7 @@ class DDPG(object):
                  sample_transitions, random_sampler, gamma,  n_step, use_dynamic_nstep, 
                  nstep_dynamic_sampler, mb_relabeling_ratio,dynamic_batchsize, dynamic_init, 
                  alpha, no_mb_relabel, no_mgsl, nstep_supervised_sampler, use_supervised, su_method,
-                  reuse=False, **kwargs):
+                 use_adv_norm=False, reuse=False, **kwargs):
         """Implementation of DDPG that is used in combination with Hindsight Experience Replay (HER).
         """
         if self.clip_return is None:
@@ -72,7 +72,12 @@ class DDPG(object):
             # no_mgsl set alpha=0, no_mb_relabel use auxilary task in her_sample rather than mgsl loss
             self.alpha = 0
             if self.no_mgsl and self.no_mb_relabel:
-                raise NotImplementedError('Please use DDPG (--noher Ture)instead.')                
+                raise NotImplementedError('Please use DDPG (--noher Ture)instead.')   
+
+        if self.use_adv_norm:
+            adv_norm = MaxNormNumpy() #AverageNormNumpy()
+        else:
+            adv_norm = None
 
         if self.use_dynamic_nstep:
             sampler = self.nstep_dynamic_sampler
@@ -98,7 +103,9 @@ class DDPG(object):
                 'train_policy':self.train_policy,
                 'get_Q_pi':self.get_Q_pi,
                 'method': self.su_method,
-                'get_ags_std':self.get_ags_std
+                'get_ags_std':self.get_ags_std,
+                'use_adv_norm': self.use_adv_norm,
+                'adv_norm': adv_norm
             }
         else: 
             sampler = self.sample_transitions
@@ -205,7 +212,7 @@ class DDPG(object):
 
     def get_target_Q(self, o, g, a, ag):
         o, g = self._preprocess_og(o, ag, g)
-        policy = self.target
+        policy = self.main
         # feed
         feed = {
             policy.o_tf: o.reshape(-1, self.dimo),
@@ -395,11 +402,7 @@ class DDPG(object):
         # loss functions
         target_Q_pi_tf = self.target.Q_pi_tf
         self.batch_r = batch_tf['r']
-        clip_range = (-self.clip_return, 0. if self.clip_pos_returns else np.inf)
-        if not self.use_supervised:
-            clip_range = (-self.clip_return, 0. if self.clip_pos_returns else np.inf)
-        else:
-            clip_range = (-self.clip_return, self.clip_return)
+        clip_range = (-self.clip_return, self.clip_return)
         if self.use_dynamic_nstep:   
             target_tf = tf.clip_by_value(batch_tf['r'] , *clip_range)  # lambda target 
         else:
@@ -416,7 +419,7 @@ class DDPG(object):
         # training policy with supervised learning (GCSL)
         self.gcsl_weight_tf = tf.placeholder(tf.float32, shape=(None,) , name='weights')
         self.weighted_sl_loss = tf.reduce_mean(tf.square(self.main.u_tf - self.main.pi_tf),axis=1)
-        self.policy_sl_loss = tf.reduce_mean(self.gcsl_weight_tf * self.weighted_sl_loss)
+        self.policy_sl_loss = tf.reduce_mean(self.gcsl_weight_tf * self.weighted_sl_loss)  #  + 0.01 * self.temp_action_loss
         # merge loss
         if self.use_dynamic_nstep:
             self.policy_sl_loss_dim = tf.reduce_mean(tf.square(self.main.u_tf - self.main.pi_tf), axis=1)  

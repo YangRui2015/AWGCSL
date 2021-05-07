@@ -176,6 +176,7 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun, obs_to_go
 
     def _sample_nstep_supervised_her_transitions(episode_batch, batch_size_in_transitions, info):
         train_policy, gamma, get_Q_pi, method, get_ags_std  = info['train_policy'], info['gamma'], info['get_Q_pi'], info['method'], info['get_ags_std']
+        use_adv_norm, adv_norm = info['use_adv_norm'], info['adv_norm']
         ags_std = get_ags_std()
         transitions, episode_idxs, t_samples, batch_size, T = _preprocess(episode_batch, batch_size_in_transitions, ags_std, use_ag_std=False)
 
@@ -197,17 +198,32 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun, obs_to_go
                 value = get_Q_pi(o=transitions['o'], g=transitions['g']).reshape(-1)
                 next_value = get_Q_pi(o=transitions['o_2'], g=transitions['g']).reshape(-1)
                 adv = _get_reward(transitions['ag_2'], transitions['g']) + gamma * next_value - value
+                print(adv.min(), adv.max(), adv.mean())
+                # if use_adv_norm:
+                #     # print(adv_norm.average_absolute)
+                #     print(adv_norm.max_absolute)
+                #     adv_norm.update(adv)
+                #     adv = adv_norm.normalize(adv)
 
                 if 'exp' in method_lis:
-                    weights *= np.exp(adv) # exp weights
+                    if 'clip10' in method_lis:
+                        weights *= np.clip(np.exp(adv), 0, 10)
+                    elif 'clip5' in method_lis:
+                        weights *= np.clip(np.exp(adv), 0, 5)
+                    elif 'clip1' in method_lis:
+                        weights *= np.clip(np.exp(adv), 0, 1)
+                    else:
+                        weights *= np.exp(adv) # exp weights
+                    
                 elif 'tanh' in method_lis:
-                    weights *= (np.tanh(adv) * 0.5 + 0.5)
+                    # weights *= (np.tanh(adv) * 0.5 + 0.5)
+                    weights *= np.tanh(adv) + 1
                 elif '01' in method_lis:
                     adv[adv < 0] = 0
                     adv[adv >= 0] = 1
                     weights *= adv
                 else:
-                    pass
+                    weights *= adv
 
             loss = train_policy(o=transitions['o'], g=transitions['g'], u=transitions['u'], weights=weights)  
 
@@ -217,8 +233,6 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun, obs_to_go
         transitions['g'][origin_index] = original_g[origin_index]
         transitions['r'] = _get_reward(transitions['ag_2'], transitions['g']) 
 
-        
-        # import pdb;pdb.set_trace()
         return _reshape_transitions(transitions, batch_size, batch_size_in_transitions)
 
     return _sample_her_transitions, _sample_nstep_dynamic_her_transitions, _sample_nstep_supervised_her_transitions

@@ -20,7 +20,7 @@ DEFAULT_ENV_PARAMS = {
     },
     'SawyerReachXYZEnv-v1':{
         'n_cycles':5,
-        'n_batches': 1,
+        'n_batches': 4,
     },
     'FetchReach-v1': {
         'n_cycles': 5,  
@@ -31,21 +31,11 @@ DEFAULT_ENV_PARAMS = {
         'n_batches': 4,
         'buffer_size': int(5E4),
     },
-    'SawyerPushAndReachEnvEasy-v0':{
+    'SawyerDoor-v0':{
         'n_cycles': 20,  
         'n_batches': 4,
-        'num_epoch': 100,
-        'batch_size': 256,
         'buffer_size': int(5E4),
-    },
-    'FetchPush-v1':{
-        'n_cycles': 20,  
-        'n_batches': 5,
-        'num_epoch': 100,
-        'batch_size': 256,
-        'buffer_size': int(5E4),
-        'rollout_batch_size': 6,
-    }
+        }
 }
 
 
@@ -65,8 +55,8 @@ DEFAULT_PARAMS = {
     'scope': 'ddpg',  # can be tweaked for testing
     'relative_goals': False,
     # training
-    'num_epoch':50, 
-    'n_cycles': 5,  # per epoch
+    'num_epoch':100, 
+    'n_cycles': 10,  # per epoch
     'rollout_batch_size': 1,  # per mpi thread
     'n_batches': 4,  # training batches per cycle
     'batch_size': 128,  # per mpi thread, measured in transitions and reduced to even multiple of chunk_length.
@@ -129,8 +119,11 @@ def prepare_mode(kwargs):
             kwargs['use_supervised'] = True
             kwargs['use_dynamic_nstep'] = False
         else:
+            kwargs['use_dynamic_nstep'] = False
+            kwargs['use_supervised'] = False
+            kwargs['n_step'] = 1
             logger.log('No such mode!')
-            raise NotImplementedError()
+            # raise NotImplementedError()
     else:
         kwargs['use_dynamic_nstep'] = False
         kwargs['use_supervised'] = False
@@ -282,7 +275,6 @@ def configure_dims(params):
     env = cached_make_env(params['make_env'])
     env.reset()
     obs, _, _, info = env.step(env.action_space.sample())
-
     dims = {
         'o': obs['observation'].shape[0],
         'u': env.action_space.shape[0],

@@ -151,6 +151,53 @@ class Normalizer:
         self.sess.run(self.recompute_op)
 
 
+class AverageNormNumpy:
+    def __init__(self):
+        self.reset()
+        
+    def reset(self):
+        self.square_sum = np.zeros(1, np.float32)
+        self.count = np.zeros(1, np.float32)
+        self.average_absolute = np.zeros(1, np.float32)
+
+    def update(self, v):
+        v = v.reshape(-1, 1)
+        self.square_sum += (np.square(v)).sum()
+        self.count += v.shape[0]
+        assert self.count >= 1, "Count must be more than 1!"
+        self.average_absolute = np.sqrt(self.square_sum / self.count)
+
+    def normalize(self, v):
+        return v  / self.average_absolute
+
+    def denormalize(self, v):
+        return v * self.average_absolute
+
+
+class MaxNormNumpy:
+    def __init__(self):
+        self.reset()
+        
+    def reset(self):
+        self.max_square = np.zeros(1, np.float32)
+        self.count = np.zeros(1, np.float32)
+        self.max_absolute = np.zeros(1, np.float32)
+
+    def update(self, v):
+        v = v.reshape(-1, 1)
+        max_cur = np.max(np.square(v))
+        self.max_square = max_cur if max_cur > self.max_square else self.max_square
+        self.count += v.shape[0]
+        assert self.count >= 1, "Count must be more than 1!"
+        self.max_absolute = np.sqrt(self.max_square)
+
+    def normalize(self, v):
+        return v  / self.max_absolute
+
+    def denormalize(self, v):
+        return v * self.max_absolute
+
+
 class IdentityNormalizer:
     def __init__(self, size, std=1.):
         self.size = size
