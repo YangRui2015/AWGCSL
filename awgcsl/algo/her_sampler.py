@@ -198,7 +198,7 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun, obs_to_go
                 value = get_Q_pi(o=transitions['o'], g=transitions['g']).reshape(-1)
                 next_value = get_Q_pi(o=transitions['o_2'], g=transitions['g']).reshape(-1)
                 adv = _get_reward(transitions['ag_2'], transitions['g']) + gamma * next_value - value
-                print(adv.min(), adv.max(), adv.mean())
+                # print(adv.min(), adv.max(), adv.mean())
                 # if use_adv_norm:
                 #     # print(adv_norm.average_absolute)
                 #     print(adv_norm.max_absolute)
