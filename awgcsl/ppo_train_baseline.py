@@ -165,7 +165,7 @@ for env_id in [argss.env_name]:
             schedule_adam = 'linear'
             schedule_clip = 'linear'
             layer_norm = True
-            state_norm = True
+            state_norm = False
             advantage_norm = True
             lossvalue_norm = True
             replay_buffer_size_IER = 50000 
@@ -362,78 +362,80 @@ for env_id in [argss.env_name]:
         network = ActorCritic(num_inputs, num_actions, layer_norm=args.layer_norm).to(device)
         running_state = ZFilter((num_inputs,), clip=5.0)
         Horizon_list = [1]
-        def eval_policy(network, num_eval_epi=100, eval_std = True):
-            return_list = []
-            reward_list = []
-            success_list = []
-            Succ_num = 0
-            eval_env = gym.make(env_id)
+        def eval_policy(net = network, num_eval_epi=100, eval_std = True):
+            net.eval()
+            with torch.no_grad():
+                eval_return_list = []
+                eval_reward_list = []
+                eval_success_list = []
+                eval_Succ_num = 0
+                eval_env = gym.make(env_id)
 
-            if env_id.startswith('Fetch'):
-                eval_env._max_episode_steps = 50
-            elif env_id.startswith('Sawyer'):
-                from awgcsl.envs.multi_world_wrapper import SawyerGoalWrapper
-                eval_env = SawyerGoalWrapper(eval_env)
-                if not hasattr(eval_env, '_max_episode_steps'):
+                if env_id.startswith('Fetch'):
+                    eval_env._max_episode_steps = 50
+                elif env_id.startswith('Sawyer'):
+                    from awgcsl.envs.multi_world_wrapper import SawyerGoalWrapper
+                    eval_env = SawyerGoalWrapper(eval_env)
+                    if not hasattr(eval_env, '_max_episode_steps'):
+                        eval_env = gym.wrappers.TimeLimit(eval_env, max_episode_steps=50)
+                elif env_id.startswith('Point2D'):
+                    from awgcsl.envs.multi_world_wrapper import PointGoalWrapper
                     eval_env = gym.wrappers.TimeLimit(eval_env, max_episode_steps=50)
-            elif env_id.startswith('Point2D'):
-                from awgcsl.envs.multi_world_wrapper import PointGoalWrapper
-                eval_env = gym.wrappers.TimeLimit(eval_env, max_episode_steps=50)
-                eval_env = PointGoalWrapper(eval_env)
-            elif env_id.startswith('Reacher'):
-                from awgcsl.envs.multi_world_wrapper import ReacherGoalWrapper
-                eval_env._max_episode_steps = 50
-                eval_env = ReacherGoalWrapper(eval_env)
-            else:
-                eval_env = gym.wrappers.TimeLimit(eval_env, max_episode_steps=50)
+                    eval_env = PointGoalWrapper(eval_env)
+                elif env_id.startswith('Reacher'):
+                    from awgcsl.envs.multi_world_wrapper import ReacherGoalWrapper
+                    eval_env._max_episode_steps = 50
+                    eval_env = ReacherGoalWrapper(eval_env)
+                else:
+                    eval_env = gym.wrappers.TimeLimit(eval_env, max_episode_steps=50)
 
-            class RewardWrapper(gym.RewardWrapper):
-                def __init__(self, eval_env):
-                    super().__init__(eval_env)
+                class RewardWrapper(gym.RewardWrapper):
+                    def __init__(self, eval_env):
+                        super().__init__(eval_env)
 
-                def reward(self, rew):
-                    if rew != 0 and rew!= -1:
-                        print(rew)
-                    assert rew == 0 or rew == -1, 'input reward should be -1/0'
-                    return rew + 1
+                    def reward(self, rew):
+                        if rew != 0 and rew!= -1:
+                            print(rew)
+                        assert rew == 0 or rew == -1, 'input reward should be -1/0'
+                        return rew + 1
 
-            eval_env = RewardWrapper(eval_env)
-            for _ in range(num_eval_epi):
-                state = eval_env.reset()
-                state = np.concatenate((state['observation'],state['desired_goal'],state['achieved_goal'])) # state_extended
+                eval_env = RewardWrapper(eval_env)
+                for _ in range(num_eval_epi):
+                    eval_state = eval_env.reset()
+                    eval_state = np.concatenate((eval_state['observation'],eval_state['desired_goal'],eval_state['achieved_goal'])) # state_extended
 
-                if args.state_norm:
-                    state = running_state(state)
-                reward_sum = 0
-                episode = []
-                return_sum = 0
-                Succ_in_env = 0
-                for t in range(50):
-                    action_mean, action_logstd, value = network(Tensor(state).unsqueeze(0).to(device))
-                    action, logproba = network.select_action(action_mean, action_logstd)
-                    action = action.data.cpu().detach().numpy()[0]
-                    #logproba = logproba.data.numpy()[0]
-                    #print('action:',action)
-                    if np.sum(np.isnan(action))>0:
-                        embed()
-                    next_state, reward, done, _ = env.step(action)
-                    if _['is_success'] !=0:
-                        Succ_in_env = 1
-                        Succ_num+=1
-                    next_state = np.concatenate((next_state['observation'],next_state['desired_goal'],next_state['achieved_goal']))
-
-                    reward_sum += reward
-                    return_sum += reward * (args.gamma**(t))
                     if args.state_norm:
-                        next_state = running_state(next_state)
-                    mask = 0 if done else 1
+                        state = running_state(state)
+                    eval_reward_sum = 0
+                    eval_episode = []
+                    eval_return_sum = 0
+                    eval_Succ_in_env = 0
+                    for t in range(50):
+                        eval_action_mean, eval_action_logstd, eval_value = network(Tensor(eval_state).unsqueeze(0).to(device))
+                        eval_action, eval_logproba = network.select_action(eval_action_mean, eval_action_logstd)
+                        eval_action = eval_action.data.cpu().detach().numpy()[0]
+                        #logproba = logproba.data.numpy()[0]
+                        #print('action:',action)
+                        if np.sum(np.isnan(eval_action))>0:
+                            embed()
+                        eval_next_state, eval_reward, eval_done, eval__ = env.step(eval_action)
+                        if _['is_success'] !=0:
+                            eval_Succ_in_env = 1
+                            eval_Succ_num+=1
+                        eval_next_state = np.concatenate((eval_next_state['observation'],eval_next_state['desired_goal'],eval_next_state['achieved_goal']))
 
-                    state = next_state
-                success_list.append(Succ_in_env)
-                reward_list.append(reward_sum)
-                return_list.append(return_sum)
-                Winrate = 1.0*Succ_num/num_eval_epi
-            return np.mean(reward_list), np.mean(return_list), Winrate, np.mean(success_list)
+                        eval_reward_sum += eval_reward
+                        eval_return_sum += eval_reward * (args.gamma**(t))
+                        if args.state_norm:
+                            next_state = running_state(next_state)
+                        eval_mask = 0 if done else 1
+
+                        eval_state = eval_next_state
+                    eval_success_list.append(eval_Succ_in_env)
+                    eval_reward_list.append(eval_reward_sum)
+                    eval_return_list.append(eval_return_sum)
+                    eval_Winrate = 1.0*eval_Succ_num/num_eval_epi
+                return np.mean(eval_reward_list), np.mean(eval_return_list), eval_Winrate, np.mean(eval_success_list)
         def ppo(args):
             num_inputs = env.observation_space.spaces['observation'].shape[0] + env.observation_space.spaces['desired_goal'].shape[0] + env.observation_space.spaces['achieved_goal'].shape[0]# extended state
             num_actions = env.action_space.shape[0]
