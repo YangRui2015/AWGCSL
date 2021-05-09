@@ -1,0 +1,302 @@
+/home/hsun/anaconda3/envs/open-mmlab/lib/python3.7/site-packages/gym/logger.py:30: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  warnings.warn(colorize('%s: %s'%('WARN', msg % args), 'yellow'))
+evaluation result: (1.67, 1.0985265159270825, 1.67, 0.22)
+Finished episode: 0 Reward: 1.2000 Return 1.2000 Stay Rate0.0240 SuccessRate0.2000
+-----------------
+evaluation result: (1.5, 0.9790094006653411, 1.5, 0.21)
+Finished episode: 1 Reward: 5.2000 Return 5.2000 Stay Rate0.1040 SuccessRate0.6000
+-----------------
+evaluation result: (0.13, 0.08425982287267868, 0.13, 0.05)
+Finished episode: 2 Reward: 0.6000 Return 0.6000 Stay Rate0.0120 SuccessRate0.2000
+-----------------
+evaluation result: (3.5, 2.095534661871451, 3.5, 0.35)
+Finished episode: 3 Reward: 0.8000 Return 0.8000 Stay Rate0.0160 SuccessRate0.4000
+-----------------
+evaluation result: (0.0, 0.0, 0.0, 0.0)
+Finished episode: 4 Reward: 3.4000 Return 3.4000 Stay Rate0.0680 SuccessRate0.4000
+-----------------
+evaluation result: (5.08, 3.120889004930394, 5.08, 0.57)
+Finished episode: 5 Reward: 2.0000 Return 2.0000 Stay Rate0.0400 SuccessRate0.2000
+-----------------
+evaluation result: (0.0, 0.0, 0.0, 0.0)
+Finished episode: 6 Reward: 0.0000 Return 0.0000 Stay Rate0.0000 SuccessRate0.0000
+-----------------
+evaluation result: (1.91, 1.2210412284050127, 1.91, 0.33)
+Finished episode: 7 Reward: 0.0000 Return 0.0000 Stay Rate0.0000 SuccessRate0.0000
+-----------------
+evaluation result: (4.0, 2.5273521546146007, 4.0, 0.43)
+Finished episode: 8 Reward: 5.2000 Return 5.2000 Stay Rate0.1040 SuccessRate0.2000
+-----------------
+evaluation result: (0.03, 0.01719538567577967, 0.03, 0.01)
+Finished episode: 9 Reward: 2.4000 Return 2.4000 Stay Rate0.0480 SuccessRate0.4000
+-----------------
+evaluation result: (0.77, 0.4907916342016238, 0.77, 0.15)
+Finished episode: 10 Reward: 5.0000 Return 5.0000 Stay Rate0.1000 SuccessRate0.6000
+-----------------
+evaluation result: (0.01, 0.006812326242398921, 0.01, 0.01)
+Finished episode: 11 Reward: 0.0000 Return 0.0000 Stay Rate0.0000 SuccessRate0.0000
+-----------------
+evaluation result: (0.34, 0.20767071819683836, 0.34, 0.04)
+Finished episode: 12 Reward: 0.6000 Return 0.6000 Stay Rate0.0120 SuccessRate0.2000
+-----------------
+evaluation result: (0.29, 0.18485309240020328, 0.29, 0.02)
+Finished episode: 13 Reward: 5.4000 Return 5.4000 Stay Rate0.1080 SuccessRate0.6000
+-----------------
+evaluation result: (0.04, 0.016449062580048385, 0.04, 0.02)
+Finished episode: 14 Reward: 2.8000 Return 2.8000 Stay Rate0.0560 SuccessRate0.4000
+-----------------
+evaluation result: (0.35, 0.21578094512860002, 0.35, 0.03)
+Finished episode: 15 Reward: 5.2000 Return 5.2000 Stay Rate0.1040 SuccessRate0.4000
+-----------------
+evaluation result: (0.73, 0.461560718094516, 0.73, 0.13)
+Finished episode: 16 Reward: 2.2000 Return 2.2000 Stay Rate0.0440 SuccessRate0.2000
+-----------------
+evaluation result: (1.99, 1.2576844147344153, 1.99, 0.26)
+Finished episode: 17 Reward: 4.6000 Return 4.6000 Stay Rate0.0920 SuccessRate0.4000
+-----------------
+evaluation result: (1.88, 1.1971577680227703, 1.88, 0.25)
+Finished episode: 18 Reward: 0.0000 Return 0.0000 Stay Rate0.0000 SuccessRate0.0000
+-----------------
+evaluation result: (13.6, 8.79035514517154, 13.6, 0.93)
+Finished episode: 19 Reward: 2.4000 Return 2.4000 Stay Rate0.0480 SuccessRate0.6000
+-----------------
+evaluation result: (0.18, 0.12752011867415228, 0.18, 0.1)
+Finished episode: 20 Reward: 0.0000 Return 0.0000 Stay Rate0.0000 SuccessRate0.0000
+-----------------
+evaluation result: (2.1, 1.383430079637955, 2.1, 0.37)
+Finished episode: 21 Reward: 6.8000 Return 6.8000 Stay Rate0.1360 SuccessRate0.6000
+-----------------
+evaluation result: (0.36, 0.20124988463587873, 0.36, 0.07)
+Finished episode: 22 Reward: 3.8000 Return 3.8000 Stay Rate0.0760 SuccessRate0.4000
+-----------------
+evaluation result: (0.25, 0.1612927082304388, 0.25, 0.12)
+Finished episode: 23 Reward: 0.0000 Return 0.0000 Stay Rate0.0000 SuccessRate0.0000
+-----------------
+evaluation result: (2.83, 1.8186413634235685, 2.83, 0.44)
+Finished episode: 24 Reward: 0.8000 Return 0.8000 Stay Rate0.0160 SuccessRate0.4000
+-----------------
+evaluation result: (8.13, 5.243363832803685, 8.13, 0.78)
+Finished episode: 25 Reward: 0.0000 Return 0.0000 Stay Rate0.0000 SuccessRate0.0000
+-----------------
+evaluation result: (1.68, 1.0090889929831, 1.68, 0.34)
+Finished episode: 26 Reward: 3.0000 Return 3.0000 Stay Rate0.0600 SuccessRate0.2000
+-----------------
+evaluation result: (2.4, 1.5351041461364299, 2.4, 0.42)
+Finished episode: 27 Reward: 0.4000 Return 0.4000 Stay Rate0.0080 SuccessRate0.2000
+-----------------
+evaluation result: (4.75, 3.0761563011463617, 4.75, 0.61)
+Finished episode: 28 Reward: 6.2000 Return 6.2000 Stay Rate0.1240 SuccessRate0.6000
+-----------------
+evaluation result: (0.01, 0.0098, 0.01, 0.01)
+Finished episode: 29 Reward: 2.8000 Return 2.8000 Stay Rate0.0560 SuccessRate0.4000
+-----------------
+evaluation result: (2.24, 1.3894763475280771, 2.24, 0.49)
+Finished episode: 30 Reward: 1.0000 Return 1.0000 Stay Rate0.0200 SuccessRate0.2000
+-----------------
+evaluation result: (1.02, 0.6221490917136202, 1.02, 0.24)
+Finished episode: 31 Reward: 2.2000 Return 2.2000 Stay Rate0.0440 SuccessRate0.6000
+-----------------
+evaluation result: (8.93, 5.613611734801892, 8.93, 0.6)
+Finished episode: 32 Reward: 7.0000 Return 7.0000 Stay Rate0.1400 SuccessRate0.6000
+-----------------
+evaluation result: (0.28, 0.17599176451060283, 0.28, 0.14)
+Finished episode: 33 Reward: 1.6000 Return 1.6000 Stay Rate0.0320 SuccessRate0.4000
+-----------------
+evaluation result: (21.68, 13.812006928855649, 21.68, 0.98)
+Finished episode: 34 Reward: 5.8000 Return 5.8000 Stay Rate0.1160 SuccessRate0.4000
+-----------------
+evaluation result: (0.4, 0.23324932255579878, 0.4, 0.15)
+Finished episode: 35 Reward: 1.6000 Return 1.6000 Stay Rate0.0320 SuccessRate0.4000
+-----------------
+evaluation result: (0.02, 0.008648370638264246, 0.02, 0.01)
+Finished episode: 36 Reward: 5.0000 Return 5.0000 Stay Rate0.1000 SuccessRate0.6000
+-----------------
+evaluation result: (15.19, 9.525067534243876, 15.19, 0.95)
+Finished episode: 37 Reward: 2.4000 Return 2.4000 Stay Rate0.0480 SuccessRate0.2000
+-----------------
+evaluation result: (11.61, 7.360935636706865, 11.61, 0.73)
+Finished episode: 38 Reward: 3.4000 Return 3.4000 Stay Rate0.0680 SuccessRate0.8000
+-----------------
+evaluation result: (10.08, 6.294156680047843, 10.08, 0.89)
+Finished episode: 39 Reward: 2.6000 Return 2.6000 Stay Rate0.0520 SuccessRate0.2000
+-----------------
+evaluation result: (13.67, 8.654553902771783, 13.67, 0.92)
+Finished episode: 40 Reward: 7.6000 Return 7.6000 Stay Rate0.1520 SuccessRate0.8000
+-----------------
+evaluation result: (8.62, 5.394545290786827, 8.62, 0.85)
+Finished episode: 41 Reward: 6.2000 Return 6.2000 Stay Rate0.1240 SuccessRate0.6000
+-----------------
+evaluation result: (0.1, 0.07413312547742396, 0.1, 0.05)
+Finished episode: 42 Reward: 6.2000 Return 6.2000 Stay Rate0.1240 SuccessRate0.6000
+-----------------
+evaluation result: (6.63, 4.227618793356213, 6.63, 0.81)
+Finished episode: 43 Reward: 2.8000 Return 2.8000 Stay Rate0.0560 SuccessRate0.4000
+-----------------
+evaluation result: (13.07, 8.349719735708208, 13.07, 0.76)
+Finished episode: 44 Reward: 7.2000 Return 7.2000 Stay Rate0.1440 SuccessRate0.8000
+-----------------
+evaluation result: (2.75, 1.8660835097204052, 2.75, 0.6)
+Finished episode: 45 Reward: 3.6000 Return 3.6000 Stay Rate0.0720 SuccessRate0.4000
+-----------------
+evaluation result: (27.57, 17.61365352742542, 27.57, 0.95)
+Finished episode: 46 Reward: 3.0000 Return 3.0000 Stay Rate0.0600 SuccessRate0.6000
+-----------------
+evaluation result: (0.52, 0.32627483967505555, 0.52, 0.14)
+Finished episode: 47 Reward: 8.6000 Return 8.6000 Stay Rate0.1720 SuccessRate0.8000
+-----------------
+evaluation result: (8.42, 5.301677158496874, 8.42, 0.83)
+Finished episode: 48 Reward: 5.4000 Return 5.4000 Stay Rate0.1080 SuccessRate0.8000
+-----------------
+evaluation result: (3.12, 2.136370527571947, 3.12, 0.42)
+Finished episode: 49 Reward: 5.6000 Return 5.6000 Stay Rate0.1120 SuccessRate0.2000
+-----------------
+evaluation result: (2.11, 1.3280469603736416, 2.11, 0.33)
+Finished episode: 0 Reward: 0.0000 Return 0.0000 Stay Rate0.0000 SuccessRate0.0000
+-----------------
+evaluation result: (0.19, 0.11413248138375925, 0.19, 0.07)
+Finished episode: 1 Reward: 0.2000 Return 0.2000 Stay Rate0.0040 SuccessRate0.2000
+-----------------
+evaluation result: (4.43, 2.836500909387693, 4.43, 0.49)
+Finished episode: 2 Reward: 1.0000 Return 1.0000 Stay Rate0.0200 SuccessRate0.2000
+-----------------
+evaluation result: (0.2, 0.13166138569916258, 0.2, 0.04)
+Finished episode: 3 Reward: 1.8000 Return 1.8000 Stay Rate0.0360 SuccessRate0.2000
+-----------------
+evaluation result: (1.94, 1.2648796898587746, 1.94, 0.24)
+Finished episode: 4 Reward: 0.0000 Return 0.0000 Stay Rate0.0000 SuccessRate0.0000
+-----------------
+evaluation result: (2.61, 1.6925685885313648, 2.61, 0.4)
+Finished episode: 5 Reward: 2.4000 Return 2.4000 Stay Rate0.0480 SuccessRate0.6000
+-----------------
+evaluation result: (1.96, 1.1837702692894745, 1.96, 0.27)
+Finished episode: 6 Reward: 0.0000 Return 0.0000 Stay Rate0.0000 SuccessRate0.0000
+-----------------
+evaluation result: (13.37, 8.302414445571385, 13.37, 0.91)
+Finished episode: 7 Reward: 1.4000 Return 1.4000 Stay Rate0.0280 SuccessRate0.4000
+-----------------
+evaluation result: (0.11, 0.07090742851970201, 0.11, 0.01)
+Finished episode: 8 Reward: 6.0000 Return 6.0000 Stay Rate0.1200 SuccessRate0.4000
+-----------------
+evaluation result: (1.64, 1.0157604183074112, 1.64, 0.26)
+Finished episode: 9 Reward: 2.2000 Return 2.2000 Stay Rate0.0440 SuccessRate0.4000
+-----------------
+evaluation result: (0.35, 0.20333004956707554, 0.35, 0.07)
+Finished episode: 10 Reward: 4.4000 Return 4.4000 Stay Rate0.0880 SuccessRate0.4000
+-----------------
+evaluation result: (1.42, 0.9050214269513098, 1.42, 0.11)
+Finished episode: 11 Reward: 4.0000 Return 4.0000 Stay Rate0.0800 SuccessRate0.4000
+-----------------
+evaluation result: (9.79, 6.259312194200569, 9.79, 0.74)
+Finished episode: 12 Reward: 4.4000 Return 4.4000 Stay Rate0.0880 SuccessRate0.4000
+-----------------
+evaluation result: (3.57, 2.2343490625366775, 3.57, 0.46)
+Finished episode: 13 Reward: 2.8000 Return 2.8000 Stay Rate0.0560 SuccessRate0.4000
+-----------------
+evaluation result: (6.61, 4.323752109119705, 6.61, 0.59)
+Finished episode: 14 Reward: 1.6000 Return 1.6000 Stay Rate0.0320 SuccessRate0.2000
+-----------------
+evaluation result: (0.11, 0.07249205593580889, 0.11, 0.02)
+Finished episode: 15 Reward: 1.6000 Return 1.6000 Stay Rate0.0320 SuccessRate0.2000
+-----------------
+evaluation result: (0.07, 0.04849751578910229, 0.07, 0.05)
+Finished episode: 16 Reward: 2.4000 Return 2.4000 Stay Rate0.0480 SuccessRate0.4000
+-----------------
+evaluation result: (2.55, 1.7412620338866203, 2.55, 0.35)
+Finished episode: 17 Reward: 0.4000 Return 0.4000 Stay Rate0.0080 SuccessRate0.2000
+-----------------
+evaluation result: (6.1, 3.793952379485059, 6.1, 0.85)
+Finished episode: 18 Reward: 4.0000 Return 4.0000 Stay Rate0.0800 SuccessRate0.8000
+-----------------
+evaluation result: (0.04, 0.02503131025599612, 0.04, 0.02)
+Finished episode: 19 Reward: 3.6000 Return 3.6000 Stay Rate0.0720 SuccessRate0.6000
+-----------------
+evaluation result: (3.16, 2.0728731871354893, 3.16, 0.54)
+Finished episode: 20 Reward: 0.6000 Return 0.6000 Stay Rate0.0120 SuccessRate0.2000
+-----------------
+evaluation result: (8.97, 5.632070941514516, 8.97, 0.91)
+Finished episode: 21 Reward: 2.0000 Return 2.0000 Stay Rate0.0400 SuccessRate0.2000
+-----------------
+evaluation result: (0.62, 0.4396509168513289, 0.62, 0.13)
+Finished episode: 22 Reward: 2.0000 Return 2.0000 Stay Rate0.0400 SuccessRate0.4000
+-----------------
+evaluation result: (0.96, 0.5877486259109661, 0.96, 0.26)
+Finished episode: 23 Reward: 0.0000 Return 0.0000 Stay Rate0.0000 SuccessRate0.0000
+-----------------
+evaluation result: (0.33, 0.1878474202041702, 0.33, 0.13)
+Finished episode: 24 Reward: 2.0000 Return 2.0000 Stay Rate0.0400 SuccessRate0.2000
+-----------------
+evaluation result: (5.19, 3.1360951336123537, 5.19, 0.72)
+Finished episode: 25 Reward: 2.8000 Return 2.8000 Stay Rate0.0560 SuccessRate0.4000
+-----------------
+evaluation result: (0.57, 0.3923206510468091, 0.57, 0.2)
+Finished episode: 26 Reward: 3.6000 Return 3.6000 Stay Rate0.0720 SuccessRate0.4000
+-----------------
+evaluation result: (0.02, 0.015795675264796524, 0.02, 0.02)
+Finished episode: 27 Reward: 0.0000 Return 0.0000 Stay Rate0.0000 SuccessRate0.0000
+-----------------
+evaluation result: (0.8, 0.5230148841161687, 0.8, 0.25)
+Finished episode: 28 Reward: 3.2000 Return 3.2000 Stay Rate0.0640 SuccessRate0.4000
+-----------------
+evaluation result: (7.36, 4.754583309046251, 7.36, 0.92)
+Finished episode: 29 Reward: 2.6000 Return 2.6000 Stay Rate0.0520 SuccessRate0.4000
+-----------------
+evaluation result: (3.88, 2.531504186424603, 3.88, 0.57)
+Finished episode: 30 Reward: 3.4000 Return 3.4000 Stay Rate0.0680 SuccessRate0.4000
+-----------------
+evaluation result: (0.58, 0.40458093925411726, 0.58, 0.3)
+Finished episode: 31 Reward: 8.2000 Return 8.2000 Stay Rate0.1640 SuccessRate0.8000
+-----------------
+evaluation result: (5.97, 3.656875124281626, 5.97, 0.7)
+Finished episode: 32 Reward: 9.4000 Return 9.4000 Stay Rate0.1880 SuccessRate0.6000
+-----------------
+evaluation result: (1.4, 0.979300414259121, 1.4, 0.52)
+Finished episode: 33 Reward: 6.4000 Return 6.4000 Stay Rate0.1280 SuccessRate0.6000
+-----------------
+evaluation result: (0.38, 0.21605085410998057, 0.38, 0.14)
+Finished episode: 34 Reward: 7.4000 Return 7.4000 Stay Rate0.1480 SuccessRate0.8000
+-----------------
+evaluation result: (6.39, 4.108939604747206, 6.39, 0.69)
+Finished episode: 35 Reward: 2.2000 Return 2.2000 Stay Rate0.0440 SuccessRate0.4000
+-----------------
+evaluation result: (4.12, 2.646225981115732, 4.12, 0.72)
+Finished episode: 36 Reward: 1.2000 Return 1.2000 Stay Rate0.0240 SuccessRate0.6000
+-----------------
+evaluation result: (6.77, 4.5781819010235045, 6.77, 0.88)
+Finished episode: 37 Reward: 6.0000 Return 6.0000 Stay Rate0.1200 SuccessRate0.8000
+-----------------
+evaluation result: (11.44, 7.155943441914823, 11.44, 0.89)
+Finished episode: 38 Reward: 6.0000 Return 6.0000 Stay Rate0.1200 SuccessRate0.4000
+-----------------
+evaluation result: (0.52, 0.36151704445885424, 0.52, 0.23)
+Finished episode: 39 Reward: 2.4000 Return 2.4000 Stay Rate0.0480 SuccessRate0.2000
+-----------------
+evaluation result: (0.07, 0.06360576812431057, 0.07, 0.03)
+Finished episode: 40 Reward: 4.6000 Return 4.6000 Stay Rate0.0920 SuccessRate0.4000
+-----------------
+evaluation result: (2.05, 1.396458604427721, 2.05, 0.48)
+Finished episode: 41 Reward: 3.8000 Return 3.8000 Stay Rate0.0760 SuccessRate0.6000
+-----------------
+evaluation result: (6.66, 4.395034916505543, 6.66, 0.81)
+Finished episode: 42 Reward: 4.8000 Return 4.8000 Stay Rate0.0960 SuccessRate0.6000
+-----------------
+evaluation result: (4.0, 2.63981847081739, 4.0, 0.7)
+Finished episode: 43 Reward: 6.2000 Return 6.2000 Stay Rate0.1240 SuccessRate0.8000
+-----------------
+evaluation result: (7.33, 4.704753448245686, 7.33, 0.86)
+Finished episode: 44 Reward: 18.2000 Return 18.2000 Stay Rate0.3640 SuccessRate0.8000
+-----------------
+evaluation result: (7.78, 5.048967975237339, 7.78, 0.95)
+Finished episode: 45 Reward: 3.6000 Return 3.6000 Stay Rate0.0720 SuccessRate0.6000
+-----------------
+evaluation result: (8.64, 5.729534793615171, 8.64, 0.97)
+Finished episode: 46 Reward: 5.6000 Return 5.6000 Stay Rate0.1120 SuccessRate0.8000
+-----------------
+evaluation result: (1.81, 1.149098745178874, 1.81, 0.53)
+Finished episode: 47 Reward: 7.4000 Return 7.4000 Stay Rate0.1480 SuccessRate0.6000
+-----------------
+evaluation result: (4.84, 3.1838829696349125, 4.84, 0.8)
+Finished episode: 48 Reward: 9.6000 Return 9.6000 Stay Rate0.1920 SuccessRate0.8000
+-----------------
+evaluation result: (0.82, 0.5091715813333664, 0.82, 0.28)
+Finished episode: 49 Reward: 1.4000 Return 1.4000 Stay Rate0.0280 SuccessRate0.6000
+-----------------

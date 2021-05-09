@@ -6,13 +6,40 @@ import gym
 from gym import wrappers
 from gym.envs.registration import register
 from argparse import ArgumentParser
+import torch.nn.functional as F
+import random
+from copy import deepcopy
+from collections import deque
+from IPython.display import clear_output
+import gym
+import torch
+import torch.nn as nn
+import torch.optim as opt
+from torch import Tensor
+from torch.autograd import Variable
+from collections import namedtuple
+from itertools import count
+import matplotlib
+import matplotlib.pyplot as plt
+from os.path import join as joindir
+from os import makedirs as mkdir
+import pandas as pd
+import numpy as np
+import argparse
+import datetime
+import math
+from IPython import embed
+
 def parse_args():
     parser = ArgumentParser(description='train args')
     parser.add_argument('-en','--env_name', type=str, default=None)
     parser.add_argument('-r','--repeat',type=int,default=None)
+    parser.add_argument('-g','--gpu',type=int,default=None)
     return parser.parse_args()
 
 argss = parse_args()
+torch.cuda.set_device(argss.gpu)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def register_envs():
     register(
         id='SawyerReachXYZEnv-v1',
@@ -75,29 +102,7 @@ ref: Schulman, John, et al. "Proximal policy optimization algorithms." arXiv pre
 ref: https://github.com/Jiankai-Sun/Proximal-Policy-Optimization-in-Pytorch/blob/master/ppo.py
 ref: https://github.com/openai/baselines/tree/master/baselines/ppo2
 """
-import torch.nn.functional as F
-import random
-from copy import deepcopy
-from collections import deque
-from IPython.display import clear_output
-import gym
-import torch
-import torch.nn as nn
-import torch.optim as opt
-from torch import Tensor
-from torch.autograd import Variable
-from collections import namedtuple
-from itertools import count
-import matplotlib
-import matplotlib.pyplot as plt
-from os.path import join as joindir
-from os import makedirs as mkdir
-import pandas as pd
-import numpy as np
-import argparse
-import datetime
-import math
-from IPython import embed
+
 
 for env_id in [argss.env_name]:
     env = gym.make(env_id)
@@ -155,9 +160,6 @@ for env_id in [argss.env_name]:
             lr_ppo = LR_PPO
             lr_hid = LR_HID
             future_p = FUTURE_P # param of HER
-            
-        
-
             num_parallel_run = 1
             # tricks
             schedule_adam = 'linear'
@@ -179,7 +181,7 @@ for env_id in [argss.env_name]:
         RESULT_DIR = 'Result_PPO'
         mkdir(RESULT_DIR, exist_ok=True)
 
-
+        
         class RunningStat(object):
             def __init__(self, shape):
                 self._n = 0
@@ -357,11 +359,81 @@ for env_id in [argss.env_name]:
 
         num_inputs = env.observation_space.spaces['observation'].shape[0] + env.observation_space.spaces['desired_goal'].shape[0] + env.observation_space.spaces['achieved_goal'].shape[0]# extended state
         num_actions = env.action_space.shape[0]
-        network = ActorCritic(num_inputs, num_actions, layer_norm=args.layer_norm)
-        model_imitation = network
-
+        network = ActorCritic(num_inputs, num_actions, layer_norm=args.layer_norm).to(device)
+        running_state = ZFilter((num_inputs,), clip=5.0)
         Horizon_list = [1]
+        def eval_policy(network, num_eval_epi=100, eval_std = True):
+            return_list = []
+            reward_list = []
+            success_list = []
+            Succ_num = 0
+            eval_env = gym.make(env_id)
 
+            if env_id.startswith('Fetch'):
+                eval_env._max_episode_steps = 50
+            elif env_id.startswith('Sawyer'):
+                from awgcsl.envs.multi_world_wrapper import SawyerGoalWrapper
+                eval_env = SawyerGoalWrapper(eval_env)
+                if not hasattr(eval_env, '_max_episode_steps'):
+                    eval_env = gym.wrappers.TimeLimit(eval_env, max_episode_steps=50)
+            elif env_id.startswith('Point2D'):
+                from awgcsl.envs.multi_world_wrapper import PointGoalWrapper
+                eval_env = gym.wrappers.TimeLimit(eval_env, max_episode_steps=50)
+                eval_env = PointGoalWrapper(eval_env)
+            elif env_id.startswith('Reacher'):
+                from awgcsl.envs.multi_world_wrapper import ReacherGoalWrapper
+                eval_env._max_episode_steps = 50
+                eval_env = ReacherGoalWrapper(eval_env)
+            else:
+                eval_env = gym.wrappers.TimeLimit(eval_env, max_episode_steps=50)
+
+            class RewardWrapper(gym.RewardWrapper):
+                def __init__(self, eval_env):
+                    super().__init__(eval_env)
+
+                def reward(self, rew):
+                    if rew != 0 and rew!= -1:
+                        print(rew)
+                    assert rew == 0 or rew == -1, 'input reward should be -1/0'
+                    return rew + 1
+
+            eval_env = RewardWrapper(eval_env)
+            for _ in range(num_eval_epi):
+                state = eval_env.reset()
+                state = np.concatenate((state['observation'],state['desired_goal'],state['achieved_goal'])) # state_extended
+
+                if args.state_norm:
+                    state = running_state(state)
+                reward_sum = 0
+                episode = []
+                return_sum = 0
+                Succ_in_env = 0
+                for t in range(50):
+                    action_mean, action_logstd, value = network(Tensor(state).unsqueeze(0).to(device))
+                    action, logproba = network.select_action(action_mean, action_logstd)
+                    action = action.data.cpu().detach().numpy()[0]
+                    #logproba = logproba.data.numpy()[0]
+                    #print('action:',action)
+                    if np.sum(np.isnan(action))>0:
+                        embed()
+                    next_state, reward, done, _ = env.step(action)
+                    if _['is_success'] !=0:
+                        Succ_in_env = 1
+                        Succ_num+=1
+                    next_state = np.concatenate((next_state['observation'],next_state['desired_goal'],next_state['achieved_goal']))
+
+                    reward_sum += reward
+                    return_sum += reward * (args.gamma**(t))
+                    if args.state_norm:
+                        next_state = running_state(next_state)
+                    mask = 0 if done else 1
+
+                    state = next_state
+                success_list.append(Succ_in_env)
+                reward_list.append(reward_sum)
+                return_list.append(return_sum)
+                Winrate = 1.0*Succ_num/num_eval_epi
+            return np.mean(reward_list), np.mean(return_list), Winrate, np.mean(success_list)
         def ppo(args):
             num_inputs = env.observation_space.spaces['observation'].shape[0] + env.observation_space.spaces['desired_goal'].shape[0] + env.observation_space.spaces['achieved_goal'].shape[0]# extended state
             num_actions = env.action_space.shape[0]
@@ -370,13 +442,13 @@ for env_id in [argss.env_name]:
             torch.manual_seed(args.seed)
 
             optimizer = opt.Adam(network.parameters(), lr=args.lr_ppo)
-            optimizer_imitation = opt.Adam(model_imitation.parameters(),lr = args.lr_hid )
 
 
-            running_state = ZFilter((num_inputs,), clip=5.0)
+            
 
 
             reward_record = []
+            eval_result = []
             global_steps = 0
 
             lr_now = args.lr_ppo
@@ -386,6 +458,7 @@ for env_id in [argss.env_name]:
                 memory = Memory()
                 num_steps = 0
                 reward_list = []
+                return_list = []
                 len_list = []
                 Succ_num = 0
 
@@ -400,14 +473,15 @@ for env_id in [argss.env_name]:
                         state = running_state(state)
                     reward_sum = 0
                     episode = []
+                    return_sum = 0
                     env_list = []
                     Succ_in_env = 0
                     for t in range(args.max_step_per_round):
-                        action_mean, action_logstd, value = network(Tensor(state).unsqueeze(0))
+                        action_mean, action_logstd, value = network(Tensor(state).unsqueeze(0).to(device))
                         action, logproba = network.select_action(action_mean, action_logstd)
 
-                        action = action.data.numpy()[0]
-                        logproba = logproba.data.numpy()[0]
+                        action = action.cpu().detach().data.numpy()[0]
+                        logproba = logproba.cpu().detach().data.numpy()[0]
                         #print('action:',action)
                         if np.sum(np.isnan(action))>0:
                             embed()
@@ -418,13 +492,14 @@ for env_id in [argss.env_name]:
                         next_state = np.concatenate((next_state['observation'],next_state['desired_goal'],next_state['achieved_goal']))
 
                         reward_sum += reward
+                        return_sum += reward * (args.gamma**(t//50))
                         if args.state_norm:
                             next_state = running_state(next_state)
                         mask = 0 if done else 1
                         episode.append((state, value, action, logproba, mask, next_state, reward))
                         memory.push(state, value, action, logproba, mask, next_state, reward)
-                        if done:
-                            break
+                        #if done:
+                        #    break
 
                         state = next_state
                     succ_game += Succ_in_env
@@ -437,6 +512,7 @@ for env_id in [argss.env_name]:
                     num_steps += (t + 1)
                     global_steps += (t + 1)
                     reward_list.append(reward_sum)
+                    return_list.append(return_sum)
                     len_list.append(t + 1)
                     Winrate = 1.0*succ_game/game_num
                     Succ_recorder.append(Winrate)
@@ -445,6 +521,7 @@ for env_id in [argss.env_name]:
                     'episode': i_episode, 
                     'steps': global_steps, 
                     'meanepreward': np.mean(reward_list), 
+                    'meanepreturn': np.mean(return_list),
                     'meaneplen': np.mean(len_list)})
 
                 rwds.extend(reward_list)
@@ -483,13 +560,13 @@ for env_id in [argss.env_name]:
                 for i_epoch in range(int(args.num_epoch * batch_size / args.minibatch_size)):
                     # sample from current batch
                     minibatch_ind = np.random.choice(batch_size, args.minibatch_size, replace=False)
-                    minibatch_states = states[minibatch_ind]
-                    minibatch_actions = actions[minibatch_ind]
-                    minibatch_oldlogproba = oldlogproba[minibatch_ind]
-                    minibatch_newlogproba = network.get_logproba(minibatch_states, minibatch_actions)
-                    minibatch_advantages = advantages[minibatch_ind]
-                    minibatch_returns = returns[minibatch_ind]
-                    minibatch_newvalues = network._forward_critic(minibatch_states).flatten()
+                    minibatch_states = states[minibatch_ind].to(device)
+                    minibatch_actions = actions[minibatch_ind].to(device)
+                    minibatch_oldlogproba = oldlogproba[minibatch_ind].to(device)
+                    minibatch_newlogproba = network.get_logproba(minibatch_states.to(device), minibatch_actions.to(device))
+                    minibatch_advantages = advantages[minibatch_ind].to(device)
+                    minibatch_returns = returns[minibatch_ind].to(device)
+                    minibatch_newvalues = network._forward_critic(minibatch_states.to(device)).flatten()
 
                     ratio =  torch.exp(minibatch_newlogproba - minibatch_oldlogproba)
                     surr1 = ratio * minibatch_advantages
@@ -521,8 +598,11 @@ for env_id in [argss.env_name]:
                         g['lr'] = lr_now
 
                 if i_episode % args.log_num_episode == 0:
-                    print('Finished episode: {} Reward: {:.4f} Stay Rate{:.4f} SuccessRate{:.4f}' \
-                        .format(i_episode, reward_record[-1]['meanepreward'],SR,Winrate))
+                    eval_result.append(eval_policy(network, 100))
+                    print('evaluation result:', eval_result[-1])
+                    np.save('Result_PPO/evaluation_result_env{}_repeat{}.npy'.format(env_id, repeat), eval_result)
+                    print('Finished episode: {} Reward: {:.4f} Return {:.4f} Stay Rate{:.4f} SuccessRate{:.4f}' \
+                        .format(i_episode, reward_record[-1]['meanepreward'], reward_record[-1]['meanepreturn'],SR,Winrate))
                     print('-----------------')
 
             return reward_record
@@ -541,4 +621,4 @@ for env_id in [argss.env_name]:
         test(args)
         rwds_HER_HID= deepcopy(rwds)
         Succ_recorder_HER_HID= deepcopy(Succ_recorder)
-        np.save('Result_PPO/method_{}_env{}_repeat{}'.format(METHOD,env_id,repeat),(rwds_HER_HID,Succ_recorder_HER_HID))
+        np.save('Result_PPO/env{}_repeat{}'.format(env_id,repeat),(rwds_HER_HID,Succ_recorder_HER_HID))
