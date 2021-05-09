@@ -35,6 +35,7 @@ def parse_args():
     parser.add_argument('-en','--env_name', type=str, default=None)
     parser.add_argument('-r','--repeat',type=int,default=None)
     parser.add_argument('-g','--gpu',type=int,default=None)
+    parser.add_argument('-n','--num_eval',type=int, default=100)
     return parser.parse_args()
 
 argss = parse_args()
@@ -411,15 +412,15 @@ for env_id in [argss.env_name]:
                     eval_return_sum = 0
                     eval_Succ_in_env = 0
                     for t in range(50):
-                        eval_action_mean, eval_action_logstd, eval_value = network(Tensor(eval_state).unsqueeze(0).to(device))
-                        eval_action, eval_logproba = network.select_action(eval_action_mean, eval_action_logstd)
+                        eval_action_mean, eval_action_logstd, eval_value = net(Tensor(eval_state).unsqueeze(0).to(device))
+                        eval_action, eval_logproba = net.select_action(eval_action_mean, eval_action_logstd)
                         eval_action = eval_action.data.cpu().detach().numpy()[0]
                         #logproba = logproba.data.numpy()[0]
                         #print('action:',action)
                         if np.sum(np.isnan(eval_action))>0:
                             embed()
                         eval_next_state, eval_reward, eval_done, eval__ = env.step(eval_action)
-                        if _['is_success'] !=0:
+                        if eval__['is_success'] !=0:
                             eval_Succ_in_env = 1
                             eval_Succ_num+=1
                         eval_next_state = np.concatenate((eval_next_state['observation'],eval_next_state['desired_goal'],eval_next_state['achieved_goal']))
@@ -428,14 +429,14 @@ for env_id in [argss.env_name]:
                         eval_return_sum += eval_reward * (args.gamma**(t))
                         if args.state_norm:
                             next_state = running_state(next_state)
-                        eval_mask = 0 if done else 1
+                        eval_mask = 0 if eval_done else 1
 
                         eval_state = eval_next_state
                     eval_success_list.append(eval_Succ_in_env)
                     eval_reward_list.append(eval_reward_sum)
                     eval_return_list.append(eval_return_sum)
-                    eval_Winrate = 1.0*eval_Succ_num/num_eval_epi
-                return np.mean(eval_reward_list), np.mean(eval_return_list), eval_Winrate, np.mean(eval_success_list)
+                    eval_Winrate = 1.0*eval_Succ_num/num_eval_epi/50
+                return np.mean(eval_reward_list), np.mean(eval_return_list), np.mean(eval_success_list), eval_Winrate
         def ppo(args):
             num_inputs = env.observation_space.spaces['observation'].shape[0] + env.observation_space.spaces['desired_goal'].shape[0] + env.observation_space.spaces['achieved_goal'].shape[0]# extended state
             num_actions = env.action_space.shape[0]
@@ -494,7 +495,7 @@ for env_id in [argss.env_name]:
                         next_state = np.concatenate((next_state['observation'],next_state['desired_goal'],next_state['achieved_goal']))
 
                         reward_sum += reward
-                        return_sum += reward * (args.gamma**(t//50))
+                        return_sum += reward * (args.gamma**(t%50))
                         if args.state_norm:
                             next_state = running_state(next_state)
                         mask = 0 if done else 1
@@ -600,7 +601,7 @@ for env_id in [argss.env_name]:
                         g['lr'] = lr_now
 
                 if i_episode % args.log_num_episode == 0:
-                    eval_result.append(eval_policy(network, 100))
+                    eval_result.append(eval_policy(network, argss.num_eval))
                     print('evaluation result:', eval_result[-1])
                     np.save('Result_PPO/evaluation_result_env{}_repeat{}.npy'.format(env_id, repeat), eval_result)
                     print('Finished episode: {} Reward: {:.4f} Return {:.4f} Stay Rate{:.4f} SuccessRate{:.4f}' \
@@ -609,7 +610,7 @@ for env_id in [argss.env_name]:
 
             return reward_record
 
-        def test(args):
+        def train(args):
             record_dfs = []
             for i in range(args.num_parallel_run):
                 args.seed += 1
@@ -620,7 +621,5 @@ for env_id in [argss.env_name]:
             record_dfs.to_csv(joindir(RESULT_DIR, 'ppo-record-env{}_repeat{}.csv'.format(env_id, repeat)))
 
 
-        test(args)
-        rwds_HER_HID= deepcopy(rwds)
-        Succ_recorder_HER_HID= deepcopy(Succ_recorder)
-        np.save('Result_PPO/env{}_repeat{}'.format(env_id,repeat),(rwds_HER_HID,Succ_recorder_HER_HID))
+        train(args)
+        
