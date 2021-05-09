@@ -36,6 +36,7 @@ def parse_args():
     parser.add_argument('-r','--repeat',type=int,default=None)
     parser.add_argument('-g','--gpu',type=int,default=None)
     parser.add_argument('-n','--num_eval',type=int, default=100)
+    parser.add_argument('-sn','--state_norm',type=bool,default=False)
     return parser.parse_args()
 
 argss = parse_args()
@@ -166,7 +167,7 @@ for env_id in [argss.env_name]:
             schedule_adam = 'linear'
             schedule_clip = 'linear'
             layer_norm = True
-            state_norm = False
+            state_norm = argss.state_norm
             advantage_norm = True
             lossvalue_norm = True
             replay_buffer_size_IER = 50000 
@@ -365,6 +366,9 @@ for env_id in [argss.env_name]:
         Horizon_list = [1]
         def eval_policy(net = network, num_eval_epi=100, eval_std = True):
             net.eval()
+            network.eval()
+            if num_eval_epi == 0:
+                return 0,0,0,0
             with torch.no_grad():
                 eval_return_list = []
                 eval_reward_list = []
@@ -406,7 +410,7 @@ for env_id in [argss.env_name]:
                     eval_state = np.concatenate((eval_state['observation'],eval_state['desired_goal'],eval_state['achieved_goal'])) # state_extended
 
                     if args.state_norm:
-                        state = running_state(state)
+                        eval_state = running_state(eval_state, update=False)
                     eval_reward_sum = 0
                     eval_episode = []
                     eval_return_sum = 0
@@ -419,7 +423,7 @@ for env_id in [argss.env_name]:
                         #print('action:',action)
                         if np.sum(np.isnan(eval_action))>0:
                             embed()
-                        eval_next_state, eval_reward, eval_done, eval__ = env.step(eval_action)
+                        eval_next_state, eval_reward, eval_done, eval__ = eval_env.step(eval_action)
                         if eval__['is_success'] !=0:
                             eval_Succ_in_env = 1
                             eval_Succ_num+=1
@@ -428,7 +432,7 @@ for env_id in [argss.env_name]:
                         eval_reward_sum += eval_reward
                         eval_return_sum += eval_reward * (args.gamma**(t))
                         if args.state_norm:
-                            next_state = running_state(next_state)
+                            eval_next_state = running_state(eval_next_state, update = False)
                         eval_mask = 0 if eval_done else 1
 
                         eval_state = eval_next_state
@@ -601,7 +605,9 @@ for env_id in [argss.env_name]:
                         g['lr'] = lr_now
 
                 if i_episode % args.log_num_episode == 0:
+                    network.eval()
                     eval_result.append(eval_policy(network, argss.num_eval))
+                    network.train()
                     print('evaluation result:', eval_result[-1])
                     np.save('Result_PPO/evaluation_result_env{}_repeat{}.npy'.format(env_id, repeat), eval_result)
                     print('Finished episode: {} Reward: {:.4f} Return {:.4f} Stay Rate{:.4f} SuccessRate{:.4f}' \
