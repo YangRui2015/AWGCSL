@@ -15,14 +15,14 @@ import gym
 import multiprocessing
 from collections import defaultdict
 from gym.wrappers import FlattenObservation
-from awgcsl.common import logger
-from awgcsl.common.monitor import Monitor
-from awgcsl.common.util import set_global_seeds
-from awgcsl.common.subproc_vec_env import SubprocVecEnv
-from awgcsl.common.dummy_vec_env import DummyVecEnv
-from awgcsl.common.wrappers import ClipActionsWrapper
-from awgcsl.common.tf_util import get_session
-from awgcsl.envs import register_envs
+from wgcsl.common import logger
+from wgcsl.common.monitor import Monitor
+from wgcsl.common.util import set_global_seeds
+from wgcsl.common.subproc_vec_env import SubprocVecEnv
+from wgcsl.common.dummy_vec_env import DummyVecEnv
+from wgcsl.common.wrappers import ClipActionsWrapper
+from wgcsl.common.tf_util import get_session
+from wgcsl.envs import register_envs
  
 register_envs()
 
@@ -94,16 +94,16 @@ def make_env(env_id, env_type, mpi_rank=0, subrank=0, seed=None, reward_scale=1.
     if env_id.startswith('Fetch'):
         env._max_episode_steps = 50
     elif env_id.startswith('Sawyer'):
-        from awgcsl.envs.multi_world_wrapper import SawyerGoalWrapper
+        from wgcsl.envs.multi_world_wrapper import SawyerGoalWrapper
         env = SawyerGoalWrapper(env)
         if not hasattr(env, '_max_episode_steps'):
             env = gym.wrappers.TimeLimit(env, max_episode_steps=50)
     elif env_id.startswith('Point2D'):
-        from awgcsl.envs.multi_world_wrapper import PointGoalWrapper
+        from wgcsl.envs.multi_world_wrapper import PointGoalWrapper
         env = gym.wrappers.TimeLimit(env, max_episode_steps=50)
         env = PointGoalWrapper(env)
     elif env_id.startswith('Reacher'):
-        from awgcsl.envs.multi_world_wrapper import ReacherGoalWrapper
+        from wgcsl.envs.multi_world_wrapper import ReacherGoalWrapper
         env._max_episode_steps = 50
         env = ReacherGoalWrapper(env)
     else:

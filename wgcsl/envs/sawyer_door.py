@@ -4,19 +4,19 @@ from gym.spaces import Box, Dict
 import mujoco_py
 from gym import Wrapper
 
-from awgcsl.envs.serializable import Serializable
-from awgcsl.envs.env_util import (
+from wgcsl.envs.serializable import Serializable
+from wgcsl.envs.env_util import (
     get_stat_in_paths,
     create_stats_ordered_dict,
     get_asset_full_path,
 )
 
-from awgcsl.envs.mujoco_env import MujocoEnv
+from wgcsl.envs.mujoco_env import MujocoEnv
 import copy
 
-from awgcsl.envs.multitask_env import MultitaskEnv
+from wgcsl.envs.multitask_env import MultitaskEnv
 import os.path as osp
-from awgcsl.envs import sawyer_door_hook
+from wgcsl.envs import sawyer_door_hook
 
 door_configs = {
     'all': dict(

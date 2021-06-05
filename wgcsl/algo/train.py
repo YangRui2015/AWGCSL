@@ -4,13 +4,13 @@ import numpy as np
 from mpi4py import MPI
 import time
 
-from awgcsl.common import logger
-from awgcsl.common import tf_util
-from awgcsl.common.util import set_global_seeds
-from awgcsl.common.mpi_moments import mpi_moments
-import awgcsl.algo.experiment.config as config
-from awgcsl.algo.rollout import RolloutWorker
-from awgcsl.algo.util import dump_params
+from wgcsl.common import logger
+from wgcsl.common import tf_util
+from wgcsl.common.util import set_global_seeds
+from wgcsl.common.mpi_moments import mpi_moments
+import wgcsl.algo.config as config
+from wgcsl.algo.rollout import RolloutWorker
+from wgcsl.algo.util import dump_params
 
 def mpi_average(value):
     if not isinstance(value, list):
@@ -37,14 +37,12 @@ def train(*, policy, rollout_worker, evaluator,
         for epi in range(int(random_init) // rollout_worker.rollout_batch_size): 
             episode = rollout_worker.generate_rollouts(random_ac=True)
             policy.store_episode(episode)
-        if policy.use_dynamic_nstep: #and policy.n_step > 1:
-            policy.update_dynamic_model(init=True)
 
     best_success_rate = -1
     logger.info('Start training...')
     # num_timesteps = n_epochs * n_cycles * rollout_length * number of rollout workers
     for epoch in range(n_epochs):
-        # from awgcsl.algo.util import write_to_file
+        # from wgcsl.algo.util import write_to_file
         # write_to_file('\n epoch: {}'.format(epoch))
         policy.set_process(epoch / n_epochs)
         time_start = time.time()
@@ -154,7 +152,7 @@ def learn(*, env, num_epoch,
         config.log_params(params, logger=logger)
 
     dims = config.configure_dims(params)
-    policy = config.configure_ddpg(dims=dims, params=params, clip_return=clip_return)
+    policy = config.configure_wgcsl(dims=dims, params=params, clip_return=clip_return)
     if load_path is not None:
         tf_util.load_variables(os.path.join(load_path, 'policy_last.pkl'))
         if load_buffer:

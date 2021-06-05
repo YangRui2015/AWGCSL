@@ -4,13 +4,13 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.staging import StagingArea
 
-from awgcsl.common import logger
-from awgcsl.algo.util import (
+from wgcsl.common import logger
+from wgcsl.algo.util import (
     import_function, store_args, flatten_grads, transitions_in_episode_batch)
-from awgcsl.algo.normalizer import Normalizer, AverageNormNumpy, MaxNormNumpy
-from awgcsl.algo.replay_buffer import ReplayBuffer
-from awgcsl.common.mpi_adam import MpiAdam
-from awgcsl.common import tf_util
+from wgcsl.algo.normalizer import Normalizer, AverageNormNumpy, MaxNormNumpy
+from wgcsl.algo.replay_buffer import ReplayBuffer
+from wgcsl.common.mpi_adam import MpiAdam
+from wgcsl.common import tf_util
 import time
 
 
@@ -18,14 +18,14 @@ def dims_to_shapes(input_dims):
     return {key: tuple([val]) if val > 0 else tuple() for key, val in input_dims.items()}
 
 
-class DDPG(object):
+class WGCSL(object):
     @store_args
     def __init__(self, input_dims, buffer_size, hidden, layers, network_class, polyak, batch_size,
                  Q_lr, pi_lr, norm_eps, norm_clip, max_u, action_l2, clip_obs, scope, T,
                  rollout_batch_size, subtract_goals, relative_goals, clip_pos_returns, clip_return,
                  sample_transitions, random_sampler, gamma,  supervised_sampler, use_supervised, su_method,
                 reuse=False, **kwargs):
-        """Implementation of DDPG that is used in combination with Hindsight Experience Replay (HER).
+        """Implementation of policy with value funcion that is used in combination with WGCSL
         """
         if self.clip_return is None:
             self.clip_return = np.inf
@@ -36,7 +36,7 @@ class DDPG(object):
         self.dimg = self.input_dims['g']
         self.dimu = self.input_dims['u']
 
-        # Prepare staging area for feeding data to the model. save data for her process
+        # Prepare staging area for feeding data to the model. 
         stage_shapes = OrderedDict()
         for key in sorted(self.input_dims.keys()):
             if key.startswith('info_'):
@@ -319,7 +319,7 @@ class DDPG(object):
         return res
 
     def _create_network(self, reuse=False):
-        logger.info("Creating a DDPG agent with action space %d x %s..." % (self.dimu, self.max_u))
+        logger.info("Creating a WGCSL agent with action space %d x %s..." % (self.dimu, self.max_u))
         self.sess = tf_util.get_session()
 
         # running averages

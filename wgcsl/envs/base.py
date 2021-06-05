@@ -2,8 +2,8 @@ import abc
 import numpy as np
 import mujoco_py
 
-from awgcsl.envs.serializable import Serializable
-from awgcsl.envs.mujoco_env import MujocoEnv
+from wgcsl.envs.serializable import Serializable
+from wgcsl.envs.mujoco_env import MujocoEnv
 
 import copy
 

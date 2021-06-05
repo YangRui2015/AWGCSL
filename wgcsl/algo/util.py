@@ -8,7 +8,7 @@ import functools
 import tensorflow as tf
 import numpy as np
 
-from awgcsl.common import tf_util as U
+from wgcsl.common import tf_util as U
 
 
 def store_args(method):
@@ -147,48 +147,6 @@ def reshape_for_broadcasting(source, target):
     shape = ([1] * (dim - 1)) + [-1]
     return tf.reshape(tf.cast(source, target.dtype), shape)
 
-def obs_to_goal_fun(env):
-    # only support Fetchenv and Handenv now
-    from gym.envs.robotics import FetchEnv, hand_env
-    from awgcsl.envs import point2d
-    from awgcsl.envs import sawyer_reach
-    from gym.envs.mujoco import reacher
-
-    tmp_env = env
-    while hasattr(tmp_env, 'env'):
-        tmp_env = tmp_env.env
-
-    if isinstance(tmp_env, FetchEnv):
-        obs_dim = env.observation_space['observation'].shape[0]
-        goal_dim = env.observation_space['desired_goal'].shape[0]
-        temp_dim = env.sim.data.get_site_xpos('robot0:grip').shape[0]
-        def obs_to_goal(observation):
-            observation = observation.reshape(-1, obs_dim)
-            if env.has_object:
-                goal = observation[:, temp_dim:temp_dim + goal_dim]
-            else:
-                goal = observation[:, :goal_dim]
-            return goal.copy()
-    elif isinstance(tmp_env, hand_env.HandEnv):
-        goal_dim = env.observation_space['desired_goal'].shape[0]
-        def obs_to_goal(observation):
-            goal = observation[:, -goal_dim:]
-            return goal.copy()
-    elif isinstance(tmp_env, point2d.Point2DEnv):
-        def obs_to_goal(observation):
-            return observation.copy()
-    elif isinstance(tmp_env, sawyer_reach.SawyerReachXYZEnv):
-        def obs_to_goal(observation):
-            return observation
-    elif isinstance(tmp_env, reacher.ReacherEnv):
-        def obs_to_goal(observation):
-            return observation[:, -3:-1]
-    else:
-        def obs_to_goal(observation):
-            return observation
-        # raise NotImplementedError('Do not support such type {}'.format(env))
-        
-    return obs_to_goal
 
 def g_to_ag(o, env_id):
     if env_id == 'FetchReach':

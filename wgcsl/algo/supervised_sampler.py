@@ -1,6 +1,6 @@
-from awgcsl.common import logger
+from wgcsl.common import logger
 import numpy as np
-from awgcsl.algo.util import random_log
+from wgcsl.algo.util import random_log
 
 def make_random_sample(reward_fun):
     def _random_sample(episode_batch, batch_size_in_transitions): 
@@ -34,23 +34,14 @@ def make_random_sample(reward_fun):
     return _random_sample
 
 
-def make_sample_her_transitions(replay_strategy, replay_k, reward_fun, obs_to_goal_fun=None, no_her=False):
-    """Creates a sample function that can be used for HER experience replay.
-
-    Args:
-        replay_strategy (in ['future', 'none']): the HER replay strategy; if set to 'none',
-            regular DDPG experience replay is used
-        replay_k (int): the ratio between HER replays and regular replays (e.g. k = 4 -> 4 times
-            as many HER replays as regular replays are used)
-        reward_fun (function): function to re-compute the reward with substituted goals
-    """
+def make_sample_transitions(replay_strategy, replay_k, reward_fun, no_relabel=False):
     if replay_strategy == 'future':
         future_p = 1 - (1. / (1 + replay_k))
     else:  
         future_p = 0
 
-    if no_her:
-        print( '*' * 10 + 'Will not use HER in this method' + '*' * 10)
+    if no_relabel:
+        print( '*' * 10 + 'Will not use relabeling in this method' + '*' * 10)
     
     def _preprocess(episode_batch, batch_size_in_transitions, ags_std=None, use_ag_std=False):
         T = episode_batch['u'].shape[1]    # steps of a episode
@@ -72,7 +63,7 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun, obs_to_go
         reward_params['info'] = info
         return reward_fun(**reward_params) + 1  # make rewards positive
 
-    def _get_her_ags(episode_batch, episode_idxs, t_samples, batch_size, T, future_p=future_p, return_t=False):
+    def _get_future_ags(episode_batch, episode_idxs, t_samples, batch_size, T, future_p=future_p, return_t=False):
         her_indexes = (np.random.uniform(size=batch_size) < future_p)
         future_offset = np.random.uniform(size=batch_size) * (T-t_samples)
         future_offset = future_offset.astype(int)
@@ -91,27 +82,15 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun, obs_to_go
         assert(transitions['u'].shape[0] == batch_size_in_transitions)
         return transitions
 
-    def _sample_her_transitions(episode_batch, batch_size_in_transitions, info=None):
-        """episode_batch is {key: array(buffer_size x T x dim_key)}
-        """
-        transitions, episode_idxs, t_samples, batch_size, T = _preprocess(episode_batch, batch_size_in_transitions)
-        if not no_her:
-            future_ag, her_indexes = _get_her_ags(episode_batch, episode_idxs, t_samples, batch_size, T)
-            transitions['g'][her_indexes] = future_ag
-
-        transitions['r'] = _get_reward(transitions['ag_2'], transitions['g'])
-        return _reshape_transitions(transitions, batch_size, batch_size_in_transitions)
-
-
-    def _sample_supervised_her_transitions(episode_batch, batch_size_in_transitions, info):
+    def _sample_supervised_transitions(episode_batch, batch_size_in_transitions, info):
         train_policy, gamma, get_Q_pi, method, get_ags_std  = info['train_policy'], info['gamma'], info['get_Q_pi'], info['method'], info['get_ags_std']
         ags_std = get_ags_std()
         transitions, episode_idxs, t_samples, batch_size, T = _preprocess(episode_batch, batch_size_in_transitions, ags_std, use_ag_std=False)
 
-        random_log('using nstep supervide policy learning with method {}'.format(method))
+        random_log('using supervide policy learning with method {}'.format(method))
         original_g = transitions['g'].copy() # save to train the value function
-        if not no_her:
-            future_ag, her_indexes, offset = _get_her_ags(episode_batch, episode_idxs, t_samples, batch_size, T, future_p=1, return_t=True)
+        if not no_relabel:
+            future_ag, her_indexes, offset = _get_future_ags(episode_batch, episode_idxs, t_samples, batch_size, T, future_p=1, return_t=True)
             transitions['g'][her_indexes] = future_ag
         else:
             offset = np.zeros(batch_size)
@@ -139,15 +118,6 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun, obs_to_go
                         weights *= np.clip(np.exp(adv), 0, 1)
                     else:
                         weights *= np.exp(adv) # exp weights
-                    
-                elif 'tanh' in method_lis:
-                    weights *= (np.tanh(adv) * 0.5 + 0.5)
-                elif '01' in method_lis:
-                    adv[adv < 0] = 0
-                    adv[adv >= 0] = 1
-                    weights *= adv
-                else:
-                    weights *= adv
 
             loss = train_policy(o=transitions['o'], g=transitions['g'], u=transitions['u'], weights=weights)  
 
@@ -158,5 +128,5 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun, obs_to_go
         transitions['r'] = _get_reward(transitions['ag_2'], transitions['g']) 
         return _reshape_transitions(transitions, batch_size, batch_size_in_transitions)
 
-    return _sample_her_transitions,  _sample_supervised_her_transitions
+    return _sample_supervised_transitions
 

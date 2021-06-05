@@ -2,12 +2,11 @@ import os
 import numpy as np
 import gym
 
-from awgcsl.common import logger
-from awgcsl.algo.ddpg import DDPG
-from awgcsl.algo.her_sampler import make_sample_her_transitions, make_random_sample
-from awgcsl.algo.util import obs_to_goal_fun
-from awgcsl.common.monitor import Monitor
-from awgcsl.envs.multi_world_wrapper import PointGoalWrapper, SawyerGoalWrapper, ReacherGoalWrapper
+from wgcsl.common import logger
+from wgcsl.algo.wgcsl import WGCSL
+from wgcsl.algo.supervised_sampler import make_sample_transitions, make_random_sample
+from wgcsl.common.monitor import Monitor
+from wgcsl.envs.multi_world_wrapper import PointGoalWrapper, SawyerGoalWrapper, ReacherGoalWrapper
 
 DEFAULT_ENV_PARAMS = {
     'Point2DLargeEnv-v1':{
@@ -44,17 +43,16 @@ DEFAULT_ENV_PARAMS = {
 DEFAULT_PARAMS = {  
     # env
     'max_u': 1.,  # max absolute value of actions on different coordinates
-    # ddpg
     'layers': 3,  # number of layers in the critic/actor networks
     'hidden': 256,  # number of neurons in each hidden layers
-    'network_class': 'awgcsl.algo.actor_critic:ActorCritic',
+    'network_class': 'wgcsl.algo.actor_critic:ActorCritic',
     'Q_lr': 5e-4,  # critic learning rate
     'pi_lr': 5e-4,  # actor learning rate
     'buffer_size': int(1E4),  # for experience replay
     'polyak': 0.9,  #polyak averaging coefficient
     'action_l2': 1.0,  # quadratic penalty on actions (before rescaling by max_u)
     'clip_obs': 200.,
-    'scope': 'ddpg',  # can be tweaked for testing
+    'scope': 'wgcsl',  # can be tweaked for testing
     'relative_goals': False,
     # training
     'num_epoch':50, 
@@ -81,7 +79,7 @@ DEFAULT_PARAMS = {
     'use_supervised': False,
 
     # if do not use her
-    'no_her':False    # used for DDPG 
+    'no_relabel':False    # used for no relabel
 }
 
 
@@ -106,11 +104,8 @@ def prepare_mode(kwargs):
             kwargs['use_supervised'] = True
         else:
             kwargs['use_supervised'] = False
-            kwargs['n_step'] = 1
     else:
         kwargs['use_supervised'] = False
-        kwargs['n_step'] = 1
-
     return kwargs
 
 
@@ -118,8 +113,8 @@ def prepare_params(kwargs):
     # default max episode steps
     kwargs = prepare_mode(kwargs)
     default_max_episode_steps = 50
-    # DDPG params
-    ddpg_params = dict()
+    # WGCSL params
+    wgcsl_params = dict()
     env_name = kwargs['env_name']
     def make_env(subrank=None):
         try:
@@ -173,12 +168,12 @@ def prepare_params(kwargs):
         del kwargs['lr']
     for name in ['buffer_size', 'hidden', 'layers','network_class','polyak','batch_size', 
                  'Q_lr', 'pi_lr', 'norm_eps', 'norm_clip', 'max_u','action_l2', 'clip_obs', 
-                 'scope', 'relative_goals', 'n_step', 'use_supervised']:
-        ddpg_params[name] = kwargs[name]
+                 'scope', 'relative_goals', 'use_supervised']:
+        wgcsl_params[name] = kwargs[name]
         kwargs['_' + name] = kwargs[name]
         del kwargs[name]
     
-    kwargs['ddpg_params'] = ddpg_params
+    kwargs['wgcsl_params'] = wgcsl_params
     return kwargs
 
 
@@ -190,7 +185,6 @@ def log_params(params, logger=logger):
 def configure_her(params):
     env = cached_make_env(params['make_env'])
     env.reset()
-    obs_to_goal = obs_to_goal_fun(env)
 
     def reward_fun(ag_2, g, info):  # vectorized
         return env.compute_reward(achieved_goal=ag_2, desired_goal=g, info=info)
@@ -198,20 +192,18 @@ def configure_her(params):
     # Prepare configuration for HER.
     her_params = {
         'reward_fun': reward_fun,
-        'obs_to_goal_fun':obs_to_goal,
-        'no_her': params['no_her']
+        'no_relabel': params['no_relabel']
     }
     for name in ['replay_strategy', 'replay_k']:
         her_params[name] = params[name]
         params['_' + name] = her_params[name]
         del params[name]
 
-    sample_her,  sample_nstep_supervised_her = make_sample_her_transitions(**her_params)
+    sample_supervised = make_sample_transitions(**her_params)
     random_sampler = make_random_sample(her_params['reward_fun'])
     samplers = {
-        'her': sample_her,
         'random': random_sampler,
-        'supervised':sample_nstep_supervised_her
+        'supervised':sample_supervised
     }
     return samplers, reward_fun
 
@@ -219,33 +211,33 @@ def simple_goal_subtract(a, b):
     assert a.shape == b.shape
     return a - b
 
-def configure_ddpg(dims, params, reuse=False, use_mpi=True, clip_return=True):
+def configure_wgcsl(dims, params, reuse=False, use_mpi=True, clip_return=True):
     samplers, reward_fun = configure_her(params)
     # Extract relevant parameters.
     rollout_batch_size = params['rollout_batch_size']
-    ddpg_params = params['ddpg_params']
+    wgcsl_params = params['wgcsl_params']
 
     input_dims = dims.copy()
-    # DDPG agent
+    # WGCSL agent
     env = cached_make_env(params['make_env'])
     env.reset()
-    ddpg_params.update({'input_dims': input_dims,  # agent takes an input observations
+    wgcsl_params.update({'input_dims': input_dims,  # agent takes an input observations
                         'T': params['T'],
                         'clip_pos_returns': True,  # clip positive returns
                         'clip_return': (1. / (1. - params['gamma'])) if clip_return else np.inf,  # max abs of return 
                         'rollout_batch_size': rollout_batch_size,
                         'subtract_goals': simple_goal_subtract,
-                        'sample_transitions': samplers['her'],
+                        'sample_transitions': samplers['random'],
                         'random_sampler':samplers['random'],
-                        'nstep_supervised_sampler':samplers['supervised'],
+                        'supervised_sampler':samplers['supervised'],
                         'gamma': params['gamma'],
                         'su_method': params['su_method']
                         })
-    ddpg_params['info'] = {
+    wgcsl_params['info'] = {
         'env_name': params['env_name'],
         'reward_fun':reward_fun
     } 
-    policy = DDPG(reuse=reuse, **ddpg_params, use_mpi=use_mpi)  
+    policy = WGCSL(reuse=reuse, **wgcsl_params, use_mpi=use_mpi)  
     return policy
 
 

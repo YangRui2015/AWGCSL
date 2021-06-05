@@ -4,7 +4,7 @@ import numpy as np
 from mpi4py import MPI
 import tensorflow as tf
 
-from awgcsl.algo.util import reshape_for_broadcasting
+from wgcsl.algo.util import reshape_for_broadcasting
 
 class NormalizerNumpy:
     def __init__(self, size, eps=1e-2):

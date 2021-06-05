@@ -6,13 +6,13 @@ import numpy as np
 import sys
 
 from gym.spaces import Box, Dict
-from awgcsl.envs.serializable import Serializable
-from awgcsl.envs.env_util import (
+from wgcsl.envs.serializable import Serializable
+from wgcsl.envs.env_util import (
     get_stat_in_paths,
     create_stats_ordered_dict, get_asset_full_path,
 )
-from awgcsl.envs.multitask_env import MultitaskEnv
-from awgcsl.envs.base import SawyerXYZEnv
+from wgcsl.envs.multitask_env import MultitaskEnv
+from wgcsl.envs.base import SawyerXYZEnv
 
 
 class SawyerDoorHookEnv(

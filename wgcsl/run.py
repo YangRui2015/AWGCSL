@@ -6,13 +6,13 @@ import gym
 import tensorflow as tf
 import numpy as np
 
-from awgcsl.common.vec_env import VecEnv
-from awgcsl.common.env_util import get_env_type, build_env, get_game_envs
-from awgcsl.common.parse_args import common_arg_parser, parse_unknown_args
-from awgcsl.common import logger
-from awgcsl.common.parse_args import get_learn_function_defaults, parse_cmdline_kwargs, parse_unknown_args
-from awgcsl.algo.her import learn
-from awgcsl.util import init_logger
+from wgcsl.common.vec_env import VecEnv
+from wgcsl.common.env_util import get_env_type, build_env, get_game_envs
+from wgcsl.common.parse_args import common_arg_parser, parse_unknown_args
+from wgcsl.common import logger
+from wgcsl.common.parse_args import get_learn_function_defaults, parse_cmdline_kwargs, parse_unknown_args
+from wgcsl.algo.train import learn
+from wgcsl.util import init_logger
 
 
 _game_envs = get_game_envs()

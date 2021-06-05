@@ -1,4 +1,4 @@
-from awgcsl.common import logger
+from wgcsl.common import logger
 try:
     from mpi4py import MPI
 except ImportError:
