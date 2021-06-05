@@ -1,8 +1,10 @@
 # Weighted Goal-conditioned Supervised Learning (WGCSL)
-WGCSL is a simple but effective algorithm for both online and offline multi-goal Reinforcement Learning via weighted supervised learning.
+WGCSL is a simple but effective algorithm for both online and offline multi-goal Reinforcement Learning via weighted supervised learning. 
+
+We provide offline multi-goal dataset in the 'offline_data' folder.
 
 <div style="text-align: center;">
-<img src="pics/offline_random.png" height=250 >
+<img src="pics/offline_random.png" >
 </div>
 
 
