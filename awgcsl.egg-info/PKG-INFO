@@ -1,0 +1,11 @@
+Metadata-Version: 2.1
+Name: awgcsl
+Version: 0.1
+Summary: Advantage-weighted Goal-Conditioned Supervise Learning.
+Home-page: UNKNOWN
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Provides-Extra: test
+Provides-Extra: mpi
+Provides-Extra: all
