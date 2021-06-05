@@ -87,7 +87,7 @@ def make_sample_transitions(replay_strategy, replay_k, reward_fun, no_relabel=Fa
         ags_std = get_ags_std()
         transitions, episode_idxs, t_samples, batch_size, T = _preprocess(episode_batch, batch_size_in_transitions, ags_std, use_ag_std=False)
 
-        random_log('using supervide policy learning with method {}'.format(method))
+        random_log('using supervide policy learning with method {} and no relabel {}'.format(method, no_relabel))
         original_g = transitions['g'].copy() # save to train the value function
         if not no_relabel:
             future_ag, her_indexes, offset = _get_future_ags(episode_batch, episode_idxs, t_samples, batch_size, T, future_p=1, return_t=True)

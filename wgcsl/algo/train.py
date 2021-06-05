@@ -154,7 +154,7 @@ def learn(*, env, num_epoch,
     dims = config.configure_dims(params)
     policy = config.configure_wgcsl(dims=dims, params=params, clip_return=clip_return)
     if load_path is not None:
-        tf_util.load_variables(os.path.join(load_path, 'policy_last.pkl'))
+        # tf_util.load_variables(os.path.join(load_path, 'policy_last.pkl'))
         if load_buffer:
             policy.buffer.load(os.path.join(load_path, 'buffer.pkl'))
 

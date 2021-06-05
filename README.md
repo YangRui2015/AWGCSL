@@ -1,7 +1,7 @@
 # Weighted Goal-conditioned Supervised Learning (WGCSL)
 WGCSL is a simple but effective algorithm for both online and offline multi-goal Reinforcement Learning via weighted supervised learning. 
 
-We provide offline multi-goal dataset in the 'offline_data' folder.
+We provide offline multi-goal dataset in the 'offline_data' folder. The 'buffer.pkl' is used for WGCSL and GCSL, and each item in the buffer are also provided as *.npy files.
 
 <div style="text-align: center;">
 <img src="pics/offline_random.png" >
@@ -25,7 +25,7 @@ Environments: Point2DLargeEnv-v1, Point2D-FourRoom-v1, FetchReach-v1, SawyerReac
 
 WGCSL: 
 ```bash
-python3 -m  wgcsl.run  --env=FetchReach-v1 --num_env 1 --mode supervised --log_path ~/${path_name} --su_method exp_adv_clip10 
+python3 -m  wgcsl.run  --env=FetchReach-v1 --num_env 1 --mode supervised --log_path ~/${path_name} --su_method gamma_exp_adv_clip10 
 ```
 
 GCSL:
@@ -43,3 +43,22 @@ GCSL + Goal-conditioned Exponential Advantage Weight:
 python -m  wgcsl.run  --env=Point2DLargeEnv-v1  --num_env 1 --mode supervised --su_method exp_adv
 ```
 
+Offline WGCSL
+```bash
+python3 -m  wgcsl.run  --env=FetchReach-v1 --num_env 1 --mode supervised  --random_init 0 --load_path ./offline_data/random/FetchReach-v1/ --load_buffer --su_method gamma_exp_adv_clip10
+```
+
+Offline GCSL
+```bash
+python3 -m  wgcsl.run  --env=FetchReach-v1 --num_env 1 --mode supervised  --random_init 0 --load_path ./offline_data/random/FetchReach-v1/ --load_buffer
+```
+
+Goal MARVIL
+```bash
+python3 -m  wgcsl.run  --env=FetchReach-v1 --num_env 1 --mode supervised  --random_init 0 --load_path ./offline_data/random/FetchReach-v1/ --load_buffer  --su_method exp_adv  --no_relabel True 
+```
+
+Goal Behavior Cloning
+```bash
+python3 -m  wgcsl.run  --env=FetchReach-v1 --num_env 1 --mode supervised  --random_init 0 --load_path ./offline_data/random/FetchReach-v1/ --load_buffer   --no_relabel True 
+```
