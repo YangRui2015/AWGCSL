@@ -29,11 +29,13 @@ DEFAULT_ENV_PARAMS = {
     'Reacher-v2': {
         'n_cycles': 20,  
         'n_batches': 4,
+        'num_epoch':100, 
         'buffer_size': int(5E4),
     },
     'SawyerDoor-v0':{
         'n_cycles': 20,  
         'n_batches': 4,
+        'num_epoch':100, 
         'buffer_size': int(5E4),
         }
 }
@@ -55,7 +57,7 @@ DEFAULT_PARAMS = {
     'scope': 'ddpg',  # can be tweaked for testing
     'relative_goals': False,
     # training
-    'num_epoch':100, 
+    'num_epoch':50, 
     'n_cycles': 10,  # per epoch
     'rollout_batch_size': 1,  # per mpi thread
     'n_batches': 4,  # training batches per cycle

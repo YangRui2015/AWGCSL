@@ -181,9 +181,12 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun, obs_to_go
         transitions, episode_idxs, t_samples, batch_size, T = _preprocess(episode_batch, batch_size_in_transitions, ags_std, use_ag_std=False)
 
         random_log('using nstep supervide policy learning with method {}'.format(method))
-        future_ag, her_indexes, offset = _get_her_ags(episode_batch, episode_idxs, t_samples, batch_size, T, future_p=1, return_t=True)
         original_g = transitions['g'].copy() # save to train the value function
-        transitions['g'][her_indexes] = future_ag
+        if not no_her:
+            future_ag, her_indexes, offset = _get_her_ags(episode_batch, episode_idxs, t_samples, batch_size, T, future_p=1, return_t=True)
+            transitions['g'][her_indexes] = future_ag
+        else:
+            offset = np.zeros(batch_size)
 
         if method == '':
             loss = train_policy(o=transitions['o'], g=transitions['g'], u=transitions['u'])   # do not use weights

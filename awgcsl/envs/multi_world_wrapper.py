@@ -7,7 +7,7 @@ from numpy.linalg.linalg import norm
 
 
 class ReacherGoalWrapper(Wrapper):
-    def __init__(self, env, threshold=0.06):
+    def __init__(self, env, threshold=0.05):
         Wrapper.__init__(self, env)
         self.env = env
         self.action_space = env.action_space
@@ -173,6 +173,9 @@ class SawyerGoalWrapper(Wrapper):
         return self.env.render()
     
     def compute_reward(self, achieved_goal, desired_goal, info):
+        return self.compute_rewards(achieved_goal, desired_goal, info)
+    
+    def compute_rewards(self, achieved_goal, desired_goal, info):
         obs = {
             'state_achieved_goal': achieved_goal,
             'state_desired_goal':desired_goal

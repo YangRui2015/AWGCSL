@@ -45,7 +45,7 @@ class RolloutWorker:
         self.initial_ag = self.obs_dict['achieved_goal']
         self.g = self.obs_dict['desired_goal']
 
-    def generate_rollouts(self, random_ac=False):
+    def generate_rollouts(self, random_ac=False, assign_goal=None):
         """Performs `rollout_batch_size` rollouts in parallel for time horizon `T` with the current
         policy acting on it accordingly.
         """
@@ -56,6 +56,9 @@ class RolloutWorker:
         ag = np.empty((self.rollout_batch_size, self.dims['g']), np.float32)  # achieved goals
         o[:] = self.initial_o
         ag[:] = self.initial_ag
+
+        if assign_goal is not None:
+            self.g = assign_goal
 
         # generate episodes
         obs, achieved_goals, acts, goals, successes, rewards = [], [], [], [], [], []

@@ -1,5 +1,5 @@
 import threading
-
+import pickle
 import numpy as np
 
 
@@ -71,7 +71,7 @@ class ReplayBuffer:
         batch_size = batch_sizes[0]
 
         with self.lock:
-            idxs = self._get_ordered_storage_idx(batch_size)  #use ordered idx get lower performance
+            idxs = self._get_ordered_storage_idx(batch_size)  
 
             # load inputs into buffers
             for key in episode_batch.keys():
@@ -149,6 +149,23 @@ class ReplayBuffer:
         if inc == 1:
             idx = idx[0]
         return idx
+
+    def save(self, path):
+        save_buffer = {key: self.buffers[key][:self.current_size] for key in self.buffer_shapes.keys()}
+        with open(path, "wb") as fp:  
+            pickle.dump(save_buffer, fp)      
+    
+    def load(self, path):
+        with open(path, "rb") as fp:  
+            data = pickle.load(fp)     
+            size = data['o'].shape[0]
+            self.current_size = size
+            if size > self.size:
+                self.buffers = {key: np.empty([size, *shape]) for key, shape in self.buffer_shapes.items()}
+                self.size = size
+            for key in self.buffer_shapes.keys():
+                self.buffers[key][:size] = data[key]
+
 
 if __name__ == "__main__":
     buffer_shapes = {'a':(2, 1)}

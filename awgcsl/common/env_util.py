@@ -23,7 +23,7 @@ from awgcsl.common.dummy_vec_env import DummyVecEnv
 from awgcsl.common.wrappers import ClipActionsWrapper
 from awgcsl.common.tf_util import get_session
 from awgcsl.envs import register_envs
-
+ 
 register_envs()
 
 def get_game_envs():

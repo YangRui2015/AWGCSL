@@ -69,10 +69,13 @@ def common_arg_parser():
     parser.add_argument('--save_path', help='Path to save trained model to', default=None, type=str)
     parser.add_argument('--load_path', help='Path to load trained model to', default=None, type=str)
     parser.add_argument('--log_path', help='Directory to save learning curve data.', default=None, type=str)
+    parser.add_argument('--save_buffer', help='If save the buffer or not', action='store_true')
+    parser.add_argument('--load_buffer', help='Path to load the offline buffer', action='store_true')
     parser.add_argument('--play', default=False, action='store_true')
     parser.add_argument('--play_no_training', default=False, action='store_true')
     parser.add_argument('--mode', help='mode of algorithms "dynamic", "supervised"', default=None, type=str)
     parser.add_argument('--su_method', help='method for supervised learning', default='', type=str)
+    parser.add_argument('--offline_train', help='If training offline or not', default=False, action='store_true')
     return parser
 
 

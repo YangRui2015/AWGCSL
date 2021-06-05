@@ -385,14 +385,13 @@ class Point2DEnv(MultitaskEnv, Serializable):
             self.ball_radius,
             Color(self.pointmass_color),
         )
-
         for wall in self.walls:
             drawer.draw_rect(
                 wall.endpoint4,
                 wall.endpoint1[0] - wall.endpoint4[0],
                 - wall.endpoint1[1] + wall.endpoint2[1],
                 Color(self._wall_color),
-                thickness=0,
+                thickness=1,
             )
         drawer.render()
 

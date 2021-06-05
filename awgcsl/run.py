@@ -36,8 +36,10 @@ def train(args, extra_args):
         seed=seed,
         num_epoch=args.num_epoch,
         save_path=args.save_path,
+        load_buffer=args.load_buffer,
         load_path=args.load_path,
         play_no_training=args.play_no_training,
+        offline_train=args.offline_train,
         mode=args.mode,
         su_method=args.su_method,
         **alg_kwargs
@@ -52,13 +54,15 @@ def main(args):
     rank = init_logger(args)
 
     model, env = train(args, extra_args)
-
     if args.save_path is not None and rank == 0:
         save_path = osp.expanduser(args.save_path)
         last_policy_path = os.path.join(save_path, 'policy_last.pkl')
         model.save(last_policy_path)
+        if args.save_buffer:
+            buffer_path = os.path.join(save_path, 'buffer.pkl')
+            model.buffer.save(buffer_path)
 
-    if args.play or args.play_no_training:
+    if args.play: #  or args.play_no_training
         logger.log("Running trained model")
         obs = env.reset()
 

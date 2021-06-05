@@ -22,16 +22,16 @@ def mpi_average(value):
 
 def train(*, policy, rollout_worker, evaluator,
           n_epochs, n_test_rollouts, n_cycles, n_batches, policy_save_interval,
-          save_path, random_init, **kwargs):
+          save_path, random_init, play_no_training, offline_train, **kwargs):
     rank = MPI.COMM_WORLD.Get_rank()
 
-    if save_path:
+    if save_path and not play_no_training:
         latest_policy_path = os.path.join(save_path, 'policy_latest.pkl')
         best_policy_path = os.path.join(save_path, 'policy_best.pkl')
         periodic_policy_path = os.path.join(save_path, 'policy_{}.pkl')
 
     # random_init for o/g/rnd stat and model training
-    if random_init:
+    if random_init and not play_no_training:
         logger.info('Random initializing ...')
         rollout_worker.clear_history()
         for epi in range(int(random_init) // rollout_worker.rollout_batch_size): 
@@ -39,7 +39,6 @@ def train(*, policy, rollout_worker, evaluator,
             policy.store_episode(episode)
         if policy.use_dynamic_nstep: #and policy.n_step > 1:
             policy.update_dynamic_model(init=True)
-        # policy.buffer.clear_buffer()
 
     best_success_rate = -1
     logger.info('Start training...')
@@ -53,8 +52,9 @@ def train(*, policy, rollout_worker, evaluator,
         rollout_worker.clear_history()
         for i in range(n_cycles):
             policy.dynamic_batch = False
-            episode = rollout_worker.generate_rollouts()
-            policy.store_episode(episode)
+            if not offline_train:
+                episode = rollout_worker.generate_rollouts()
+                policy.store_episode(episode)
             for j in range(n_batches):   
                 policy.train()
             policy.update_target_net()
@@ -81,12 +81,12 @@ def train(*, policy, rollout_worker, evaluator,
 
         # save the policy if it's better than the previous ones
         success_rate = mpi_average(evaluator.current_success_rate())
-        if rank == 0 and success_rate > best_success_rate and save_path:
+        if rank == 0 and success_rate > best_success_rate and save_path and not play_no_training:
             best_success_rate = success_rate
             logger.info('New best success rate: {}. Saving policy to {} ...'.format(best_success_rate, best_policy_path))
             evaluator.save_policy(best_policy_path)
             evaluator.save_policy(latest_policy_path)
-        if rank == 0 and policy_save_interval > 0 and epoch % policy_save_interval == 0 and save_path:
+        if rank == 0 and policy_save_interval > 0 and epoch % policy_save_interval == 0 and save_path and not play_no_training:
             policy_path = periodic_policy_path.format(epoch)
             logger.info('Saving periodic policy to {} ...'.format(policy_path))
             evaluator.save_policy(policy_path)
@@ -109,10 +109,11 @@ def learn(*, env, num_epoch,
     clip_return=True,
     demo_file=None,
     override_params=None,
+    load_buffer=False,
     load_path=None,
     save_path=None,
-    random_init=0,
     play_no_training=False,
+    offline_train=False,
     mode=None,
     su_method='',
     **kwargs
@@ -139,8 +140,8 @@ def learn(*, env, num_epoch,
     params.update(**override_params)  # makes it possible to override any parameter
 
     params.update(kwargs)   # make kwargs part of params
-    if 'num_epoch' in params:
-        num_epoch = params['num_epoch']
+    # if 'num_epoch' in params:
+    #     num_epoch = params['num_epoch']
     params['mode'] = mode
     params['su_method'] = su_method
     params = config.prepare_params(params)
@@ -155,11 +156,9 @@ def learn(*, env, num_epoch,
     dims = config.configure_dims(params)
     policy = config.configure_ddpg(dims=dims, params=params, clip_return=clip_return)
     if load_path is not None:
-        tf_util.load_variables(load_path)
-    
-    # no training
-    if play_no_training:  
-        return policy
+        tf_util.load_variables(os.path.join(load_path, 'policy_last.pkl'))
+        if load_buffer:
+            policy.buffer.load(os.path.join(load_path, 'buffer.pkl'))
 
     rollout_params = {
         'exploit': False,
@@ -185,9 +184,20 @@ def learn(*, env, num_epoch,
     rollout_worker = RolloutWorker(env, policy, dims, logger, monitor=True, **rollout_params)
     evaluator = RolloutWorker(eval_env, policy, dims, logger, **eval_params)
 
+    # no training
+    if play_no_training:  
+        # sample trajetories
+        num_episode = 20 
+        policy.buffer.clear_buffer()
+        for _ in range(num_episode):
+            episode = rollout_worker.generate_rollouts()
+            policy.store_episode(episode)
+        return policy
+
     return train(
         save_path=save_path, policy=policy, rollout_worker=rollout_worker,
         evaluator=evaluator, n_epochs=num_epoch, n_test_rollouts=params['n_test_rollouts'],
         n_cycles=params['n_cycles'], n_batches=params['n_batches'],
-        policy_save_interval=policy_save_interval, demo_file=demo_file, random_init=random_init)
+        policy_save_interval=policy_save_interval, demo_file=demo_file, random_init=random_init,
+        play_no_training=play_no_training, offline_train=offline_train)
 
