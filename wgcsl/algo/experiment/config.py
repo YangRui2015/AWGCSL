@@ -76,18 +76,6 @@ DEFAULT_PARAMS = {
 
     # random init episode
     'random_init':20, 
-
-    # n step hindsight experience
-    'n_step':3,
-
-    # dynamic n-step
-    'use_dynamic_nstep':False,  
-    'alpha':3,
-    'mb_relabeling_ratio': 0.8,
-    'no_mb_relabel':False,
-    'no_mgsl':False,
-    'dynamic_batchsize':512,  # warm up the dynamic model
-    'dynamic_init':100,
     
     # use supervised
     'use_supervised': False,
@@ -114,20 +102,12 @@ def cached_make_env(make_env):
 def prepare_mode(kwargs):
     if 'mode' in kwargs.keys():
         mode = kwargs['mode']
-        if mode == 'dynamic':
-            kwargs['use_dynamic_nstep'] = True
-            kwargs['use_supervised'] = False
-        elif mode == 'supervised':
+        if mode == 'supervised':
             kwargs['use_supervised'] = True
-            kwargs['use_dynamic_nstep'] = False
         else:
-            kwargs['use_dynamic_nstep'] = False
             kwargs['use_supervised'] = False
             kwargs['n_step'] = 1
-            logger.log('No such mode!')
-            # raise NotImplementedError()
     else:
-        kwargs['use_dynamic_nstep'] = False
         kwargs['use_supervised'] = False
         kwargs['n_step'] = 1
 
@@ -193,9 +173,7 @@ def prepare_params(kwargs):
         del kwargs['lr']
     for name in ['buffer_size', 'hidden', 'layers','network_class','polyak','batch_size', 
                  'Q_lr', 'pi_lr', 'norm_eps', 'norm_clip', 'max_u','action_l2', 'clip_obs', 
-                 'scope', 'relative_goals', 'n_step', 'use_dynamic_nstep', 
-                 'alpha', 'dynamic_init', 'dynamic_batchsize', 'mb_relabeling_ratio',
-                 'no_mb_relabel', 'no_mgsl','use_supervised']:
+                 'scope', 'relative_goals', 'n_step', 'use_supervised']:
         ddpg_params[name] = kwargs[name]
         kwargs['_' + name] = kwargs[name]
         del kwargs[name]
@@ -228,12 +206,11 @@ def configure_her(params):
         params['_' + name] = her_params[name]
         del params[name]
 
-    sample_her, sample_nstep_dynamic_her, sample_nstep_supervised_her = make_sample_her_transitions(**her_params)
+    sample_her,  sample_nstep_supervised_her = make_sample_her_transitions(**her_params)
     random_sampler = make_random_sample(her_params['reward_fun'])
     samplers = {
         'her': sample_her,
         'random': random_sampler,
-        'dynamic':sample_nstep_dynamic_her,
         'supervised':sample_nstep_supervised_her
     }
     return samplers, reward_fun
@@ -260,7 +237,6 @@ def configure_ddpg(dims, params, reuse=False, use_mpi=True, clip_return=True):
                         'subtract_goals': simple_goal_subtract,
                         'sample_transitions': samplers['her'],
                         'random_sampler':samplers['random'],
-                        'nstep_dynamic_sampler':samplers['dynamic'],
                         'nstep_supervised_sampler':samplers['supervised'],
                         'gamma': params['gamma'],
                         'su_method': params['su_method']

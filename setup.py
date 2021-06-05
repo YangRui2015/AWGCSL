@@ -26,9 +26,9 @@ for group_name in extras:
 
 extras['all'] = all_deps
 
-setup(name='awgcsl',
+setup(name='wgcsl',
       packages=[package for package in find_packages()
-                if package.startswith('awgcsl')],
+                if package.startswith('wgcsl')],
       install_requires=[
           'gym>=0.15.4, <0.16.0',
           'scipy',
@@ -38,7 +38,7 @@ setup(name='awgcsl',
           'click',
       ],
       extras_require=extras,
-      description='Advantage-weighted Goal-Conditioned Supervise Learning.',
+      description='Weighted Goal-Conditioned Supervise Learning.',
       version='0.1')
 
 

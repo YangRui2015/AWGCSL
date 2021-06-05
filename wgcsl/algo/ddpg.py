@@ -11,7 +11,6 @@ from awgcsl.algo.normalizer import Normalizer, AverageNormNumpy, MaxNormNumpy
 from awgcsl.algo.replay_buffer import ReplayBuffer
 from awgcsl.common.mpi_adam import MpiAdam
 from awgcsl.common import tf_util
-from awgcsl.algo.dynamics import ForwardDynamicsNumpy
 import time
 
 
@@ -24,10 +23,8 @@ class DDPG(object):
     def __init__(self, input_dims, buffer_size, hidden, layers, network_class, polyak, batch_size,
                  Q_lr, pi_lr, norm_eps, norm_clip, max_u, action_l2, clip_obs, scope, T,
                  rollout_batch_size, subtract_goals, relative_goals, clip_pos_returns, clip_return,
-                 sample_transitions, random_sampler, gamma,  n_step, use_dynamic_nstep, 
-                 nstep_dynamic_sampler, mb_relabeling_ratio,dynamic_batchsize, dynamic_init, 
-                 alpha, no_mb_relabel, no_mgsl, nstep_supervised_sampler, use_supervised, su_method,
-                 use_adv_norm=False, reuse=False, **kwargs):
+                 sample_transitions, random_sampler, gamma,  supervised_sampler, use_supervised, su_method,
+                reuse=False, **kwargs):
         """Implementation of DDPG that is used in combination with Hindsight Experience Replay (HER).
         """
         if self.clip_return is None:
@@ -48,8 +45,6 @@ class DDPG(object):
         for key in ['o', 'g']:
             stage_shapes[key + '_2'] = stage_shapes[key]
         stage_shapes['r'] = (None,)
-        if self.use_dynamic_nstep:
-            stage_shapes['idxs'] = (None, )
         self.stage_shapes = stage_shapes
 
         # Create network.
@@ -66,37 +61,11 @@ class DDPG(object):
         buffer_shapes = {key: (self.T-1 if key != 'o' else self.T, *input_shapes[key]) for key, val in input_shapes.items()}
         buffer_shapes['g'] = (buffer_shapes['g'][0], self.dimg)
         buffer_shapes['ag'] = (self.T, self.dimg)
-        buffer_size = (self.buffer_size // self.rollout_batch_size) * self.rollout_batch_size # buffer_size % rollout_batch_size should be zero
+        # buffer_size % rollout_batch_size should be zero
+        buffer_size = (self.buffer_size // self.rollout_batch_size) * self.rollout_batch_size 
 
-        if self.no_mgsl or self.no_mb_relabel:
-            # no_mgsl set alpha=0, no_mb_relabel use auxilary task in her_sample rather than mgsl loss
-            self.alpha = 0
-            if self.no_mgsl and self.no_mb_relabel:
-                raise NotImplementedError('Please use DDPG (--noher Ture)instead.')   
-
-        if self.use_adv_norm:
-            adv_norm = MaxNormNumpy() #AverageNormNumpy()
-        else:
-            adv_norm = None
-
-        if self.use_dynamic_nstep:
-            sampler = self.nstep_dynamic_sampler
-            info = {
-                'nstep':self.n_step,
-                'gamma':self.gamma,
-                'get_Q_pi':self.get_Q_pi,
-                'dynamic_model':self.dynamic_model,
-                'action_fun':self.action_only,
-                'train_policy':self.train_policy,
-                'get_rate':self.get_process,
-                'alpha':self.alpha,
-                'mb_relabeling_ratio': self.mb_relabeling_ratio,
-                'no_mb_relabel':self.no_mb_relabel,
-                'no_mgsl':self.no_mgsl,
-                'use_dynamic_nstep':True
-            }
-        elif self.use_supervised:
-            sampler = self.nstep_supervised_sampler
+        if self.use_supervised:
+            sampler = self.supervised_sampler
             info = {
                 'use_supervised':True,
                 'gamma':self.gamma,
@@ -104,8 +73,6 @@ class DDPG(object):
                 'get_Q_pi':self.get_Q_pi,
                 'method': self.su_method,
                 'get_ags_std':self.get_ags_std,
-                'use_adv_norm': self.use_adv_norm,
-                'adv_norm': adv_norm
             }
         else: 
             sampler = self.sample_transitions
@@ -287,15 +254,6 @@ class DDPG(object):
         self.Q_adam.update(Q_grad, self.Q_lr)
         self.pi_adam.update(pi_grad, self.pi_lr)
 
-    def update_dynamic_model(self, init=False):
-        times = 1
-        if init:
-            times = self.dynamic_init 
-        for _ in range(times):
-            transitions = self.buffer.sample(self.dynamic_batchsize, random=True)
-            loss = self.dynamic_model.update(transitions['o'], transitions['u'], transitions['o_2'])
-            if np.random.random() < 0.05:
-                print('model loss:' + str(loss))
 
     def sample_batch(self, method='list'):
         transitions = self.buffer.sample(self.batch_size)   #otherwise only sample from primary buffer
@@ -403,10 +361,7 @@ class DDPG(object):
         target_Q_pi_tf = self.target.Q_pi_tf
         self.batch_r = batch_tf['r']
         clip_range = (-self.clip_return, self.clip_return)
-        if self.use_dynamic_nstep:   
-            target_tf = tf.clip_by_value(batch_tf['r'] , *clip_range)  # lambda target 
-        else:
-            target_tf = tf.clip_by_value(batch_tf['r'] + self.gamma * target_Q_pi_tf, *clip_range)
+        target_tf = tf.clip_by_value(batch_tf['r'] + self.gamma * target_Q_pi_tf, *clip_range)
 
         self.target_tf = target_tf
         self.Q_loss_tf = tf.reduce_mean(tf.square(tf.stop_gradient(target_tf) - self.main.Q_tf))
@@ -420,10 +375,6 @@ class DDPG(object):
         self.gcsl_weight_tf = tf.placeholder(tf.float32, shape=(None,) , name='weights')
         self.weighted_sl_loss = tf.reduce_mean(tf.square(self.main.u_tf - self.main.pi_tf),axis=1)
         self.policy_sl_loss = tf.reduce_mean(self.gcsl_weight_tf * self.weighted_sl_loss)  #  + 0.01 * self.temp_action_loss
-        # merge loss
-        if self.use_dynamic_nstep:
-            self.policy_sl_loss_dim = tf.reduce_mean(tf.square(self.main.u_tf - self.main.pi_tf), axis=1)  
-            self.pi_loss_tf += self.alpha * tf.reduce_mean(batch_tf['idxs'] * self.policy_sl_loss_dim)
 
         Q_grads_tf = tf.gradients(self.Q_loss_tf, self._vars('main/Q'))
         pi_grads_tf = tf.gradients(self.pi_loss_tf, self._vars('main/pi'))
@@ -441,7 +392,6 @@ class DDPG(object):
         self.Q_adam = MpiAdam(self._vars('main/Q'), scale_grad_by_procs=False)
         self.pi_adam = MpiAdam(self._vars('main/pi'), scale_grad_by_procs=False)
 
-        self.dynamic_model = ForwardDynamicsNumpy(self.dimo, self.dimu)
         # polyak averaging
         self.main_vars = self._vars('main/Q') + self._vars('main/pi')
         self.target_vars = self._vars('target/Q') + self._vars('target/pi')
