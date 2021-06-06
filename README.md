@@ -1,7 +1,7 @@
 # Weighted Goal-conditioned Supervised Learning (WGCSL)
 WGCSL is a simple but effective algorithm for both online and offline multi-goal Reinforcement Learning via weighted supervised learning. 
 
-We provide offline multi-goal dataset in the 'offline_data' folder, including 'random' and 'expert' settings. The 'buffer.pkl' is used for WGCSL and GCSL, and each item in the buffer are also provided as *.npy files.
+We provide offline multi-goal dataset in the 'offline_data' folder, including 'random' and 'expert' settings. The 'buffer.pkl' is used for WGCSL and GCSL, and each item in the buffer are also provided as *.npy files. The google drive link of the offline dataset is also here: https://drive.google.com/drive/folders/1SIo3qFmMndz2DAnUpnCozP8CpG420ANb.
 
 <div style="text-align: center;">
 <img src="pics/offline_random.png" >
