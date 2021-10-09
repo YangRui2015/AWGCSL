@@ -81,7 +81,6 @@ class WGCSL(object):
         
         self.buffer = ReplayBuffer(buffer_shapes, buffer_size, self.T, sampler, self.sample_transitions, info)
 
-
     def _random_action(self, n):
         return np.random.uniform(low=-self.max_u, high=self.max_u, size=(n, self.dimu))
 
@@ -269,7 +268,6 @@ class WGCSL(object):
     def train(self, stage=True):
         if stage:
             self.stage_batch()
-
         if not self.use_supervised:
             critic_loss, actor_loss, Q_grad, pi_grad = self._grads()
             self._update(Q_grad, pi_grad)

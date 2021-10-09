@@ -134,7 +134,6 @@ class RolloutWorker:
 
         for key, value in zip(self.info_keys, info_values):
             episode['info_{}'.format(key)] = value
-
         successful = np.array(successes)[-1, :]
         assert successful.shape == (self.rollout_batch_size,)
         success_rate = np.mean(successful)

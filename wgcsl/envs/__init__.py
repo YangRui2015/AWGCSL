@@ -34,6 +34,7 @@ def register_envs():
         },
     )
     register(
+<<<<<<< HEAD
         id='PointFixedEnv-v1',
         entry_point='wgcsl.envs.point2d:Point2DEnv',
         tags={
@@ -56,6 +57,8 @@ def register_envs():
         },
     )
     register(
+=======
+>>>>>>> fca8084336eb0d61e6cc54cd5645b02bd1e57e39
         id='Point2D-FourRoom-v1',
         entry_point='wgcsl.envs.point2d:Point2DWallEnv',
         kwargs={
