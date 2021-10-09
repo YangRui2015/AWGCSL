@@ -2,7 +2,7 @@
 Code for *Rethinking Goal-Conditioned Supervised Learning and Its Connection to Offline RL*.
 WGCSL is a simple but effective algorithm for offline goal-conditioned Reinforcement Learning via weighted supervised learning. 
 
-We provide offline goal-conditioned benchmark with offline dataset in the 'offline_data' folder, including 'random' and 'expert' settings. The 'buffer.pkl' is used for WGCSL and other algorithms included in our codes (GCSL, MARVIL, BC, HER, DDPG), and each item in the buffer are also provided as *.npy files for training Goal BCQ and Goal CQL. The anonymous google drive link of the offline dataset is also here: https://drive.google.com/drive/folders/1SIo3qFmMndz2DAnUpnCozP8CpG420ANb.
+We provide offline goal-conditioned benchmark with offline dataset in the 'offline_data' folder, including 'random' and 'expert' settings. The 'buffer.pkl' is used for WGCSL and other algorithms included in our codes (GCSL, MARVIL, BC, HER, DDPG), and each item in the buffer are also provided as *.npy files for training Goal BCQ and Goal CQL. Due to the storage limitation, the full offline dataset is in this anonymous google drive link: https://drive.google.com/drive/folders/1SIo3qFmMndz2DAnUpnCozP8CpG420ANb.
 
 
 <div style="text-align: center;">
