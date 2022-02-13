@@ -1,0 +1,2 @@
+The full dataset is too large. Therefore, we only provide the 'buffer.pkl' file for training WGCSL/GCSL/MARWIL/BC/HER/DDPG.
+**Regarding the 'npy' files to train Goal BCQ and Goal CQL, one can run the 'convert_buffer_to_npy.py' file to get these files or download the full datasets from the Google driver.** 
